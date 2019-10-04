@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.16, for macos10.14 (x86_64)
 --
--- Host: 127.0.0.1    Database: nodemysql
+-- Host: 127.0.0.1    Database: dev2qa
 -- ------------------------------------------------------
 -- Server version	8.0.16
 
@@ -14,6 +14,35 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `calendar`
+--
+
+DROP TABLE IF EXISTS `calendar`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+ SET character_set_client = utf8mb4 ;
+CREATE TABLE `calendar` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `client` varchar(45) DEFAULT NULL,
+  `therapist_first` varchar(45) DEFAULT NULL,
+  `therapist_last` varchar(45) DEFAULT NULL,
+  `location` varchar(45) DEFAULT NULL,
+  `startdate` date DEFAULT NULL,
+  `enddate` date DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `calendar`
+--
+
+LOCK TABLES `calendar` WRITE;
+/*!40000 ALTER TABLE `calendar` DISABLE KEYS */;
+INSERT INTO `calendar` VALUES (1,'john smith','harry potter',NULL,'hogwarts','2015-01-01','2015-01-02'),(4,'john','changed',NULL,'changed2','2017-01-02','2017-01-03'),(5,'john','changed',NULL,'changed2','2017-01-02','2017-01-03'),(6,'jane jordan','hermione weasley',NULL,'hogwarts','2015-01-07','2015-01-07'),(10,'test','test',NULL,'test','2015-01-07','2015-01-07');
+/*!40000 ALTER TABLE `calendar` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `clients`
@@ -119,14 +148,14 @@ DROP TABLE IF EXISTS `invoices`;
 CREATE TABLE `invoices` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `status` varchar(45) DEFAULT NULL,
-  `date` varchar(45) DEFAULT NULL,
-  `payor_first` varchar(45) DEFAULT NULL,
-  `payor_last` varchar(45) DEFAULT NULL,
+  `inv_date` date DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
   `amount` varchar(45) DEFAULT NULL,
+  `payor_full` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -135,7 +164,7 @@ CREATE TABLE `invoices` (
 
 LOCK TABLES `invoices` WRITE;
 /*!40000 ALTER TABLE `invoices` DISABLE KEYS */;
-INSERT INTO `invoices` VALUES (1,'Paid',NULL,'Mary','Smith',NULL,NULL,'$120'),(2,'Paid',NULL,'Jim','Adams',NULL,NULL,'$80');
+INSERT INTO `invoices` VALUES (3,NULL,'2019-10-01','2019-10-01','2019-10-05','2019-10-16',NULL,'Bob Joe'),(4,NULL,'2019-10-01','2019-10-01','2019-10-02','2019-10-01',NULL,'Sarah Silver'),(5,NULL,'2019-10-01','2019-09-01','2019-09-30','2019-10-15',NULL,'Sarah Silver');
 /*!40000 ALTER TABLE `invoices` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -195,8 +224,22 @@ CREATE TABLE `testevent` (
   `end` timestamp NULL DEFAULT NULL,
   `location` varchar(45) DEFAULT NULL,
   `category` varchar(45) DEFAULT NULL,
+  `repeats` varchar(45) DEFAULT NULL,
+  `repeat_option` varchar(45) DEFAULT NULL,
+  `end_repeat` varchar(45) DEFAULT NULL,
+  `num_occurences` varchar(45) DEFAULT NULL,
+  `end_date_occurrence` date DEFAULT NULL,
+  `custom_frequency` varchar(45) DEFAULT NULL,
+  `repeat_num_days` varchar(45) DEFAULT NULL,
+  `mon` tinyint(4) DEFAULT NULL,
+  `tues` tinyint(4) DEFAULT NULL,
+  `wed` tinyint(4) DEFAULT NULL,
+  `thu` tinyint(4) DEFAULT NULL,
+  `fri` tinyint(4) DEFAULT NULL,
+  `sat` tinyint(4) DEFAULT NULL,
+  `sun` tinyint(4) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=525 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=551 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -205,7 +248,7 @@ CREATE TABLE `testevent` (
 
 LOCK TABLES `testevent` WRITE;
 /*!40000 ALTER TABLE `testevent` DISABLE KEYS */;
-INSERT INTO `testevent` VALUES (2,'event2',NULL,'John Smith','Harry Potter','2019-07-13 16:30:00','2019-07-13 17:30:00',NULL,NULL),(129,'Ashley Flowers','Non-billable','Ashley Flowers','Therapist 1',NULL,NULL,'rr','None'),(130,'Ashley Flowers','Billable','Ashley Flowers','Harry Potter',NULL,NULL,'rrr','None'),(131,'Jill Smith','Non-billable','Jill Smith','Harry Potter',NULL,NULL,'hi jamie','None'),(145,'Jill Smith','Non-billable','Jill Smith','Therapist 1','2019-07-21 22:16:26','2019-07-21 23:16:26','jkj','None'),(504,'Sarah Silver','','Sarah Silver','','2019-09-13 15:48:04','2019-09-13 16:48:04','',''),(505,'Jaren Jones','','Jaren Jones','','2019-09-13 15:51:00','2019-09-13 16:51:00','',''),(506,'Ian Stark','','Ian Stark','','2019-09-13 15:51:18','2019-09-13 15:51:18','',''),(507,'John Jackson','','John Jackson','','2019-09-13 15:51:24','2019-09-13 15:51:24','',''),(508,'John Jackson','','John Jackson','','2019-09-14 15:51:24','2019-09-14 15:51:24','',''),(509,'John Jackson','','John Jackson','','2019-09-15 15:51:24','2019-09-15 15:51:24','',''),(510,'John Jackson','','John Jackson','','2019-09-16 15:51:24','2019-09-16 15:51:24','',''),(511,'Billy Joe','','Billy Joe','','2019-09-16 17:29:00','2019-09-16 18:29:00','',''),(512,'Ian Stark','','Ian Stark','','2019-09-16 17:30:00','2019-09-16 18:30:00','',''),(514,'Ian Stark','','Ian Stark','','2019-09-20 17:32:00','2019-09-20 18:32:00','',''),(516,'Joe Jackson','','Joe Jackson','','2019-09-27 21:42:00','2019-09-27 22:42:00','',''),(517,'Sarah Silver','','Sarah Silver','','2019-09-28 21:43:00','2019-09-28 22:43:00','',''),(518,'Jaren Jones','','Jaren Jones','','2019-09-28 21:44:00','2019-09-28 22:44:00','',''),(519,'Joe Jackson','','Joe Jackson','','2019-09-28 21:55:00','2019-09-28 23:55:00','',''),(520,'Sarah Silver','','Sarah Silver','','2019-09-14 22:09:44','2019-09-14 23:09:44','',''),(521,'Ian Stark','','Ian Stark','','2019-09-14 22:09:54','2019-09-14 23:09:54','','');
+INSERT INTO `testevent` VALUES (2,'event2',NULL,'John Smith','Harry Potter','2019-07-13 16:30:00','2019-07-13 17:30:00',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(516,'Joe Jackson','','Joe Jackson','','2019-09-27 21:42:00','2019-09-27 22:42:00','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(517,'Sarah Silver','','Sarah Silver','','2019-09-28 21:43:00','2019-09-28 22:43:00','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(518,'Jaren Jones','','Jaren Jones','','2019-09-28 21:44:00','2019-09-28 22:44:00','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(547,'Sarah Silver','','Sarah Silver','Lisa Simpson','2019-10-27 03:03:00','2019-10-27 04:03:00','','','true','Weekly','After','2',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(549,'Sarah Silver','','Sarah Silver','','2019-10-11 03:29:54','2019-10-11 04:29:54','','','true','Weekly','After','3',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(550,'Sarah Silver','','Sarah Silver','','2019-10-18 03:29:54','2019-10-18 04:29:54','','','true','Weekly','After','3',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `testevent` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -225,7 +268,7 @@ CREATE TABLE `transactions` (
   `method` varchar(45) DEFAULT NULL,
   `description` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -234,7 +277,7 @@ CREATE TABLE `transactions` (
 
 LOCK TABLES `transactions` WRITE;
 /*!40000 ALTER TABLE `transactions` DISABLE KEYS */;
-INSERT INTO `transactions` VALUES (1,NULL,NULL,'Mary Smith','40','Card',NULL),(2,NULL,NULL,'Jim Adams','20','Check','Check #456'),(3,'2019-09-25','Discount','Jack Johnson','4','Cash','dd'),(4,'2019-09-25','Discount','Jack Johnson','44','Cash','dd'),(7,'2019-09-25','Discount','Mary Smith','4','Cash','dd'),(8,'2019-10-01','Payment','Jack Johnson','20','Cash','dddd'),(9,'2019-09-27','Payment','Jack Johnson','1','Cash','2'),(10,'2019-09-27','Payment','Jack Johnson','1','Cash','2');
+INSERT INTO `transactions` VALUES (1,NULL,NULL,'Mary Smith','40','Card',NULL),(2,NULL,NULL,'Jim Adams','20','Check','Check #456'),(3,'2019-10-01','Discount','Jack Johnson','22','Card','Discount for Jack');
 /*!40000 ALTER TABLE `transactions` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -247,4 +290,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-10-01  0:25:42
+-- Dump completed on 2019-10-03 22:59:26
