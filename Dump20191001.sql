@@ -15,34 +15,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
---
--- Table structure for table `calendar`
---
-
-DROP TABLE IF EXISTS `calendar`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
- SET character_set_client = utf8mb4 ;
-CREATE TABLE `calendar` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `client` varchar(45) DEFAULT NULL,
-  `therapist_first` varchar(45) DEFAULT NULL,
-  `therapist_last` varchar(45) DEFAULT NULL,
-  `location` varchar(45) DEFAULT NULL,
-  `startdate` date DEFAULT NULL,
-  `enddate` date DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `calendar`
---
-
-LOCK TABLES `calendar` WRITE;
-/*!40000 ALTER TABLE `calendar` DISABLE KEYS */;
-INSERT INTO `calendar` VALUES (1,'john smith','harry potter',NULL,'hogwarts','2015-01-01','2015-01-02'),(4,'john','changed',NULL,'changed2','2017-01-02','2017-01-03'),(5,'john','changed',NULL,'changed2','2017-01-02','2017-01-03'),(6,'jane jordan','hermione weasley',NULL,'hogwarts','2015-01-07','2015-01-07'),(10,'test','test',NULL,'test','2015-01-07','2015-01-07');
-/*!40000 ALTER TABLE `calendar` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `clients`
