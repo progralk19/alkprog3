@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { withRouter } from "react-router";
+
 //import BigCalendar from "react-big-calendar";
 import Calendar from "react-big-calendar";
 import moment from "moment";
@@ -32,7 +34,13 @@ import Container from "@material-ui/core/Container";
 
 import { Redirect, Link } from "react-router-dom";
 
-import axios from "axios";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
+// Snackbar
+import Snackbar from "@material-ui/core/Snackbar";
+import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
+
+import API from "../utils/API";
 
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
@@ -76,13 +84,20 @@ const navStyle = {
 
 const theme = createMuiTheme({
   palette: {
-    primary: { main: "#b2dfdb" }
+    primary: { main: "#b2dfdb" },
+    secondary: { main: "#f44336" }
   }
 });
 
 const theme2 = createMuiTheme({
   palette: {
     primary: { main: "#00838f" }
+  }
+});
+
+const deleteTheme = createMuiTheme({
+  palette: {
+    primary: { main: "#f44336" }
   }
 });
 
@@ -168,6 +183,13 @@ class ReactCalendarBase extends Component {
     super(...args);
 
     this.state = {
+      eventId: 0,
+      seriesStartId: 0,
+      isShowRepeatOptionInExistingDalog: false,
+      deleteDialog: false,
+      deleteSuccessSnackbarOpen: false,
+      deleteFailureSnackbarOpen: false,
+      isSoleDialog: false,
       cal_events: [
         //State is updated via componentDidMount
       ],
@@ -191,11 +213,10 @@ class ReactCalendarBase extends Component {
       information: "",
       intervalIsSet: "",
       checkedRepeat: false,
-      repeatOption: null,
-      newEndRepeat: null,
-      newNumOccurences: null,
-      selectedDateOccurenceEnd: null,
-      existingCustomFreq: null,
+      repeatOption: false,
+      newEndRepeat: "",
+      newNumOccurences: "",
+      selectedDateOccurenceEnd: "",
       sun: false,
       mon: false,
       tues: false,
@@ -203,14 +224,14 @@ class ReactCalendarBase extends Component {
       thu: false,
       fri: false,
       sat: false,
-      newRepeatEveryNumDays: null,
-      newRepeatEveryNumWeeks: null,
-      newRepeatEveryNumMonths: null,
+      newRepeatEveryNumDays: "",
+      newRepeatEveryNumWeeks: "",
+      newRepeatEveryNumMonths: "",
       selectedDate: moment().format("YYYY-MM-DD HH:mm:ss"),
       endSelectedDate: moment().format("YYYY-MM-DD HH:mm:ss"),
-      redirect: false,
+      redirect: false
       // EXISTING EVENT
-      redirectDocs: false,
+      /* redirectDocs: false,
       attendance: "Present",
       existingBillType: "Billable",
       existingClientType: "Individual",
@@ -218,13 +239,17 @@ class ReactCalendarBase extends Component {
       existingTherapist: "Harry Potter",
       existingLocation: "Main Building",
       existingCategory: "None",
-      existingRepeat: "Weekly",
+      existingStart: "",
+      existingEnd: "",
+      existingRepeatOption: "Weekly",
       existingEndRepeat: "On Date",
-      existingNumOccurences: "",
+      existingCustomFreq: "",
       existingEveryNumDays: "",
       existingEveryNumWeeks: "",
-      existingNumMonths: "",
-      existingCheckedRepeat: true
+      existingEveryNumMonths: "",
+      existingCheckedRepeat: false,
+      existingNumOccurences: 0,
+      existingEndDateOccurrence: "" */
     };
   }
 
@@ -232,57 +257,13 @@ class ReactCalendarBase extends Component {
     return moment.utc(date).toDate();
   };
 
-  componentDidMount() {
-    axios
-      .get("http://localhost:5000/events")
-      .then(response => {
-        console.log("Got event data!");
-        console.log(response.data);
-        let appointments = response.data;
-        this.setState({
-          cal_events: appointments
-        });
-      })
-      .then(response2 => {
-        return axios
-          .get("http://localhost:5000/gettherapists") // this is not using the sequelize method
-          .then(response2 => {
-            console.log("Got therapist data!");
-            console.log(response2.data);
-            this.setState({
-              therapistData: response2.data
-            });
-          });
-      })
-      .then(response3 => {
-        return axios.get("http://localhost:5000/getclients").then(response3 => {
-          console.log("Got client data!");
-          console.log(response3.data);
-          this.setState({
-            clientData: response3.data
-          });
-        });
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
-
-    if (!this.state.intervalIsSet) {
-      let interval = setInterval(this.getDataFromDb, 1000);
-      this.setState({ intervalIsSet: interval });
-      console.log("Data interval set!");
-    }
+  async componentDidMount() {
+    await this.updateContent();
   }
 
   // never let a process live forever
   // always kill a process everytime we are done using it
-  componentWillUnmount() {
-    if (this.state.intervalIsSet) {
-      clearInterval(this.state.intervalIsSet);
-      this.setState({ intervalIsSet: null });
-      console.log("Unmounted from events!");
-    }
-  }
+  componentWillUnmount() {}
 
   onSubmit(e) {
     //experiment keeping preventDefault
@@ -300,7 +281,7 @@ class ReactCalendarBase extends Component {
       checkedRepeat: this.state.checkedRepeat, //true,false
       repeatOption: this.state.repeatOption, //"Daily","Weekly","Monthly","Custom"
       newEndRepeat: this.state.newEndRepeat, //"After","On Date"
-      existingNumOccurences: this.state.existingNumOccurences, //"4"
+      newNumOccurences: this.state.newNumOccurences, //"4"
       selectedDateOccurenceEnd: this.state.selectedDateOccurenceEnd, //"2019-09-18 03:41:00"
       newCustomFreq: this.state.newCustomFreq, //"Specific Days","Every x days","Weekly","Montly"
       newRepeatEveryNumDays: this.state.newRepeatEveryNumDays,
@@ -323,7 +304,7 @@ class ReactCalendarBase extends Component {
         alert('Please select "Repeat Option"');
       } else if (!obj.newEndRepeat) {
         alert('Please select "End Repeat"');
-      } else if (obj.newEndRepeat === "After" && !obj.existingNumOccurences) {
+      } else if (obj.newEndRepeat === "After" && !obj.newNumOccurences) {
         alert('Please enter "Occurances"');
       } else if (
         obj.newEndRepeat === "On Date" &&
@@ -333,24 +314,25 @@ class ReactCalendarBase extends Component {
       } else if (obj.repeatOption === "Custom" && !obj.newCustomFreq) {
         alert('Please select "Custom Frequency"');
       } else {
-        axios
-          .post("http://localhost:5000/insertevent", obj)
+        API.post("/events/insert", obj)
           // .then(res => console.log(res.data));
-          .then(response => {
+          .then(async response => {
             this.setState({
               obj,
-              open: false,
-              redirect: true
+              open: false
+              // redirect: true
             });
+            await this.updateContent();
           });
       }
     } else {
-      axios.post("http://localhost:5000/insertevent", obj).then(response => {
+      API.post("/events/insert", obj).then(async response => {
         this.setState({
           obj,
-          open: false,
-          redirect: true
+          open: false
+          // redirect: true
         });
+        await this.updateContent();
       });
       //.then(res => console.log(res.data));
     }
@@ -370,7 +352,7 @@ class ReactCalendarBase extends Component {
       checkedRepeat: false,
       repeatOption: "",
       newEndRepeat: "",
-      existingNumOccurences: "",
+      newNumOccurences: "",
       selectedDateOccurenceEnd: moment().format("YYYY-MM-DD HH:mm:ss"),
       newCustomFreq: "",
       newRepeatEveryNumDays: "",
@@ -387,6 +369,105 @@ class ReactCalendarBase extends Component {
       // open: false
     });
   }
+
+  async updateContent() {
+    try {
+      const eventsResp = await API.get("/events");
+      const therapistsResp = await API.get("/members/getTherapists");
+      const clientsResp = await API.get("/clients/all");
+      const cal_events =
+        (eventsResp.data.data || []).map(event => {
+          const { title, start, end, ...resource } = event;
+          return {
+            title,
+            start,
+            end,
+            resource
+          };
+        }) || [];
+      const therapistData = therapistsResp.data.data || [];
+      const clientData = clientsResp.data.data || [];
+
+      this.setState(
+        {
+          cal_events,
+          therapistData,
+          clientData
+        },
+        () => {
+          // this.changeContentWithClientId()
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  handleIsSoleDialogClose = () => {
+    this.setState({ isSoleDialog: false });
+  };
+
+  handleIsSoleDialogOpen = () => {
+    this.setState({ isSoleDialog: true });
+  };
+
+  handleOccurence = () => {
+    this.setState({
+      isShowRepeatOptionInExistingDalog: false,
+      isSoleDialog: false,
+      openExisting: true
+    });
+  };
+
+  handleSeries = () => {
+    this.setState({
+      isShowRepeatOptionInExistingDalog: true,
+      isSoleDialog: false,
+      openExisting: true
+    });
+  };
+
+  handleDeleteDialogOpen = () => {
+    this.setState({ deleteDialog: true });
+  };
+
+  handleDeleteDialogClose = () => {
+    this.setState({ deleteDialog: false });
+  };
+
+  handleDelete = () => {
+    if (this.state.isShowRepeatOptionInExistingDalog)
+      API.delete(`/events/series/${this.state.seriesStartId}`)
+        .then(async resp => {
+          this.handleCloseExisting();
+          await this.updateContent();
+        })
+        .catch(error => {
+          console.log("ee", error);
+          this.setState({
+            deleteFailureSnackbarOpen: true,
+            deleteClientErrorMsg: error
+          });
+        });
+    else
+      API.delete(`/events/${this.state.eventId}`)
+        .then(async resp => {
+          this.handleCloseExisting();
+          await this.updateContent();
+        })
+        .catch(error => {
+          console.log("ee", error);
+          this.setState({
+            deleteFailureSnackbarOpen: true,
+            deleteClientErrorMsg: error
+          });
+        });
+    this.handleDeleteDialogClose();
+  };
+
+  handleSnackbarClose = () => {
+    this.setState({ deleteFailureSnackbarOpen: false });
+  };
 
   /* show new event dialog box */
   handleClickOpen = () => {
@@ -432,8 +513,61 @@ class ReactCalendarBase extends Component {
   };
 
   /* show existing event dialog box */
-  handleClickOpen2 = () => {
-    this.setState({ openExisting: true });
+  handleClickOpen2 = event => {
+    const {
+      id,
+      title,
+      bill_type,
+      client,
+      therapist,
+      location,
+      repeats,
+      repeat_option,
+      end_repeat,
+      num_occurences,
+      end_date_occurrence,
+      custom_frequency,
+      repeat_num_days,
+      mon,
+      tues,
+      wed,
+      thu,
+      fri,
+      sat,
+      sun,
+      category,
+      series_start_id
+    } = event.resource;
+
+    if (repeats === "true") this.setState({ isSoleDialog: true });
+    else this.setState({ openExisting: true });
+    this.setState({
+      eventId: id,
+      seriesStartId: series_start_id,
+      existingBillType: bill_type || "",
+      existingClient: client || "",
+      existingTherapist: therapist || "",
+      existingLocation: location || "",
+      existingCategory: category || "",
+      existingStart: event.start || "",
+      existingEnd: event.end || "",
+      existingRepeatOption: repeat_option || "",
+      existingEveryNumDays: repeat_num_days || "",
+      existingEveryNumWeeks: "" || "",
+      existingEveryNumMonths: "" || "",
+      existingCheckedRepeat: Boolean(repeats) || false,
+      existingEndRepeat: end_repeat || "",
+      existingCustomFreq: custom_frequency || "",
+      existingNumOccurences: num_occurences || "",
+      existingEndDateOccurrence: end_date_occurrence,
+      sun: Boolean(sun),
+      mon: Boolean(mon),
+      tues: Boolean(tues),
+      wed: Boolean(wed),
+      thu: Boolean(thu),
+      fri: Boolean(fri),
+      sat: Boolean(sat)
+    });
   };
 
   /* close existing event dialog box */
@@ -444,7 +578,7 @@ class ReactCalendarBase extends Component {
   handleChange = name => event => {
     this.setState({
       [name]: event.target.value,
-      newCustomFreq: null,
+      newCustomFreq: "",
       sun: false,
       mon: false,
       tues: false,
@@ -490,11 +624,11 @@ class ReactCalendarBase extends Component {
     this.setState({
       [name]: event.target.checked,
       //this will set the values to blank once the window is closed
-      repeatOption: null,
-      newEndRepeat: null,
-      newNumOccurences: null,
-      selectedDateOccurenceEnd: null,
-      existingCustomFreq: null,
+      repeatOption: "",
+      newEndRepeat: "",
+      newNumOccurences: "",
+      selectedDateOccurenceEnd: "",
+      existingCustomFreq: "",
       sun: false,
       mon: false,
       tues: false,
@@ -502,9 +636,9 @@ class ReactCalendarBase extends Component {
       thu: false,
       fri: false,
       sat: false,
-      newRepeatEveryNumDays: null,
-      newRepeatEveryNumWeeks: null,
-      newRepeatEveryNumMonths: null
+      newRepeatEveryNumDays: "",
+      newRepeatEveryNumWeeks: "",
+      newRepeatEveryNumMonths: ""
       // contact 3,
       /* checkedContact3: false,
       contactFirstName3: null,
@@ -598,13 +732,15 @@ class ReactCalendarBase extends Component {
         >
           <form className={classes.container} noValidate autoComplete="off">
             <DialogContent>
-              <IconButton>
-                <NoteAddIcon
-                  color="primary"
-                  fontSize="large"
-                  onClick={this.handleRedirectDocs}
-                />
-              </IconButton>
+              <Grid direction row>
+                {!this.state.isShowRepeatOptionInExistingDalog && (
+                  <IconButton onClick={this.handleRedirectDocs}>
+                    <MuiThemeProvider theme={theme}>
+                      <NoteAddIcon color="primary" fontSize="large" />
+                    </MuiThemeProvider>
+                  </IconButton>
+                )}
+              </Grid>
               <TextField
                 required
                 id="bill_type"
@@ -625,7 +761,7 @@ class ReactCalendarBase extends Component {
               >
                 {newBillTypes.map(option => (
                   <MenuItem key={option.value} value={option.value}>
-                    {option.label}
+                    {option.value}
                   </MenuItem>
                 ))}
               </TextField>
@@ -647,7 +783,7 @@ class ReactCalendarBase extends Component {
                 }}
               >
                 {clientData.map(option => (
-                  <MenuItem key={option.value} value={option.client_full_name}>
+                  <MenuItem key={option.id} value={option.client_full_name}>
                     {option.client_full_name}
                   </MenuItem>
                 ))}
@@ -667,8 +803,8 @@ class ReactCalendarBase extends Component {
                   }
                 }}
               >
-                {therapistData.map(option => (
-                  <MenuItem key={option.value} value={option.member_full_name}>
+                {therapistData.map((option, i) => (
+                  <MenuItem key={i} value={option.member_full_name}>
                     {option.member_full_name}
                   </MenuItem>
                 ))}
@@ -713,15 +849,17 @@ class ReactCalendarBase extends Component {
               </TextField>
               <MuiThemeProvider theme={theme}>
                 <MuiPickersUtilsProvider utils={MomentUtils}>
-                  <Grid container row>
+                  <Grid container>
                     <MuiThemeProvider theme={theme2}>
                       <DatePicker
                         inputVariant="outlined"
                         margin="normal"
                         className={classes.textField2}
                         label="Date picker"
-                        value={selectedDate}
-                        onChange={this.handleDateChangeStart}
+                        value={this.state.existingStart}
+                        onChange={date =>
+                          this.setState({ existingStart: date })
+                        }
                       />
 
                       <TimePicker
@@ -729,61 +867,68 @@ class ReactCalendarBase extends Component {
                         inputVariant="outlined"
                         className={classes.textField2}
                         label="Time picker"
-                        value={selectedDate}
-                        onChange={this.handleDateChangeStart}
+                        value={this.state.existingStart}
+                        onChange={date =>
+                          this.setState({ existingStart: date })
+                        }
                       />
                     </MuiThemeProvider>
                   </Grid>
                 </MuiPickersUtilsProvider>
               </MuiThemeProvider>
               <MuiPickersUtilsProvider utils={MomentUtils}>
-                <Grid container row>
+                <Grid container>
                   <MuiThemeProvider theme={theme2}>
                     <DatePicker
                       margin="normal"
                       inputVariant="outlined"
                       label="Date picker"
                       className={classes.textField2}
-                      value={endSelectedDate}
-                      onChange={this.handleDateChangeEnd}
+                      value={this.state.existingEnd}
+                      onChange={date => this.setState({ existingStart: date })}
                     />
                     <TimePicker
                       inputVariant="outlined"
                       margin="normal"
                       label="Time picker"
                       className={classes.textField2}
-                      value={endSelectedDate}
-                      onChange={this.handleDateChangeEnd}
+                      value={this.state.existingEnd}
+                      onChange={date => this.setState({ existingStart: date })}
                     />
                   </MuiThemeProvider>
                 </Grid>
               </MuiPickersUtilsProvider>
-              <Container>
-                <MuiThemeProvider theme={theme}>
-                  <FormGroup row>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={this.state.checkedRepeat}
-                          onChange={this.handleChangeCheck2("checkedRepeat")}
-                          value="checkedRepeat"
-                          color="primary"
-                        />
-                      }
-                      label="Repeat"
-                    />
-                  </FormGroup>
-                </MuiThemeProvider>
-              </Container>
-              {this.state.checkedRepeat ? (
+              {this.state.isShowRepeatOptionInExistingDalog && (
+                <Container>
+                  <MuiThemeProvider theme={theme}>
+                    <FormGroup row>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={this.state.existingCheckedRepeat}
+                            onChange={this.handleChangeCheck2(
+                              "existingCheckedRepeat"
+                            )}
+                            value="existingCheckedRepeat"
+                            color="primary"
+                          />
+                        }
+                        label="Repeat"
+                      />
+                    </FormGroup>
+                  </MuiThemeProvider>
+                </Container>
+              )}
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingCheckedRepeat ? (
                 <TextField
                   id="standard-select-repeatOption"
                   select
                   label="Repeats"
                   variant="outlined"
                   className={classes.textField}
-                  value={this.state.repeatOption}
-                  onChange={this.handleChange("repeatOption")}
+                  value={this.state.existingRepeatOption}
+                  onChange={this.handleChange("existingRepeatOption")}
                   SelectProps={{
                     MenuProps: {
                       className: classes.menu
@@ -798,7 +943,8 @@ class ReactCalendarBase extends Component {
                 </TextField>
               ) : null}
 
-              {this.state.repeatOption === "Custom" ? (
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingRepeatOption === "Custom" ? (
                 <TextField
                   id="standard-select-client"
                   select
@@ -806,8 +952,8 @@ class ReactCalendarBase extends Component {
                   variant="outlined"
                   margin="normal"
                   className={classes.textField}
-                  value={this.state.newCustomFreq}
-                  onChange={this.handleChangeCustom("newCustomFreq")}
+                  value={this.state.existingCustomFreq}
+                  onChange={this.handleChangeCustom("existingCustomFreq")}
                   SelectProps={{
                     MenuProps: {
                       className: classes.menu
@@ -822,7 +968,7 @@ class ReactCalendarBase extends Component {
                 </TextField>
               ) : null}
 
-              {this.state.newCustomFreq === "Specific Days" ? (
+              {this.state.existingCustomFreq === "Specific Days" ? (
                 <MuiThemeProvider theme={theme}>
                   <FormGroup row>
                     <FormLabel component="legend">Every</FormLabel>
@@ -853,7 +999,7 @@ class ReactCalendarBase extends Component {
                         <Checkbox
                           checked={this.state.tues}
                           onChange={this.handleChangeCheck("tues")}
-                          value="tues"
+                          value="Tues"
                           color="primary"
                         />
                       }
@@ -864,7 +1010,7 @@ class ReactCalendarBase extends Component {
                         <Checkbox
                           checked={this.state.wed}
                           onChange={this.handleChangeCheck("wed")}
-                          value="wed"
+                          value="Wed"
                           color="primary"
                         />
                       }
@@ -907,26 +1053,30 @@ class ReactCalendarBase extends Component {
                 </MuiThemeProvider>
               ) : null}
 
-              {this.state.newCustomFreq === "Every x days" ? (
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingCustomFreq === "Every x days" ? (
                 <TextField
                   id="standard-newNumOccurences"
                   label="Every Number of Days"
                   variant="outlined"
                   className={classes.textField2}
-                  value={this.state.newRepeatEveryNumDays}
-                  onChange={this.handleChangeCustom("newRepeatEveryNumDays")}
+                  value={this.state.existingEveryNumDays}
+                  onChange={this.handleChangeCustom("existingEveryNumDays")}
                   margin="normal"
                 />
               ) : null}
 
-              {this.state.existingCustomFreq === "Weekly" ? (
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingCustomFreq === "Weekly" ? (
                 <TextField
                   id="standard-newNumOccurences"
                   label="Every Number of Weeks"
                   variant="outlined"
                   className={classes.textField2}
-                  value={this.state.newRepeatEveryNumWeeks}
-                  onChange={this.handleChangeCustom("newRepeatEveryNumWeeks")}
+                  value={this.state.existingRepeatEveryNumWeeks}
+                  onChange={this.handleChangeCustom(
+                    "existingRepeatEveryNumWeeks"
+                  )}
                   margin="normal"
                 />
               ) : null}
@@ -937,13 +1087,16 @@ class ReactCalendarBase extends Component {
                   label="Every Number of Months"
                   variant="outlined"
                   className={classes.textField2}
-                  value={this.state.newRepeatEveryNumMonths}
-                  onChange={this.handleChangeCustom("newRepeatEveryNumMonths")}
+                  value={this.state.existingRepeatEveryNumMonths}
+                  onChange={this.handleChangeCustom(
+                    "existingRepeatEveryNumMonths"
+                  )}
                   margin="normal"
                 />
               ) : null}
 
-              {this.state.checkedRepeat ? (
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingCheckedRepeat ? (
                 <TextField
                   id="standard-select-client"
                   select
@@ -951,8 +1104,8 @@ class ReactCalendarBase extends Component {
                   variant="outlined"
                   margin="normal"
                   className={classes.textField2}
-                  value={this.state.newEndRepeat}
-                  onChange={this.handleChange2("newEndRepeat")}
+                  value={this.state.existingEndRepeat}
+                  onChange={this.handleChange2("existingEndRepeat")}
                   SelectProps={{
                     MenuProps: {
                       className: classes.menu
@@ -967,19 +1120,21 @@ class ReactCalendarBase extends Component {
                 </TextField>
               ) : null}
 
-              {this.state.newEndRepeat === "After" ? (
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingEndRepeat === "After" ? (
                 <TextField
                   id="standard-newNumOccurences"
                   label="Occurences"
                   variant="outlined"
                   className={classes.textField2}
-                  value={this.state.newNumOccurences}
+                  value={this.state.existingNumOccurences}
                   onChange={this.handleChange2("existingNumOccurences")}
                   margin="normal"
                 />
               ) : null}
 
-              {this.state.newEndRepeat === "On Date" ? (
+              {this.state.isShowRepeatOptionInExistingDalog &&
+              this.state.existingEndRepeat === "On Date" ? (
                 <MuiPickersUtilsProvider utils={MomentUtils}>
                   <MuiThemeProvider theme={theme2}>
                     <DatePicker
@@ -987,16 +1142,54 @@ class ReactCalendarBase extends Component {
                       className={classes.textField2}
                       margin="normal"
                       id="mui-pickers-date"
-                      label="End On"
-                      value={this.state.selectedDateOccurenceEnd}
-                      onChange={this.handleDateOccurenceChange}
+                      label="End Repeat On"
+                      value={this.state.existingEndDateOccurrence}
+                      onChange={this.handleChange2("existingEndDateOccurrence")}
                     />
                   </MuiThemeProvider>
                 </MuiPickersUtilsProvider>
               ) : null}
-              <IconButton>
-                <DeleteForeverIcon color="secondary" fontSize="large" />
-              </IconButton>
+              <Grid direction row>
+                <MuiThemeProvider theme={theme}>
+                  <IconButton onClick={this.handleDeleteDialogOpen}>
+                    <DeleteForeverIcon color="secondary" fontSize="large" />
+                  </IconButton>
+                </MuiThemeProvider>
+              </Grid>
+              <Snackbar
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right"
+                }}
+                open={this.state.deleteFailureSnackbarOpen}
+                onClose={this.handleSnackbarClose}
+                autoHideDuration={3000}
+              >
+                <MySnackbarContentWrapper
+                  variant="error"
+                  className={classes.margin}
+                  message={`Something went wrong while removing client: ${this.state.deleteClientErrorMsg}`}
+                />
+              </Snackbar>
+              <Dialog
+                open={this.state.deleteDialog}
+                onClose={this.handleDeleteDialogClose}
+              >
+                <DialogTitle>
+                  Are you sure you want to delete this appointment?
+                </DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Once this appointment has been deleted, it cannot be undone.
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={this.handleDeleteDialogClose}>No</Button>
+                  <Button onClick={this.handleDelete} autoFocus>
+                    Yes
+                  </Button>
+                </DialogActions>
+              </Dialog>
             </DialogContent>
             <Grid container justify="flex-end" alignItems="flex-end">
               <MuiThemeProvider theme={theme2}>
@@ -1010,6 +1203,25 @@ class ReactCalendarBase extends Component {
               </MuiThemeProvider>
             </Grid>
           </form>
+        </Dialog>
+        {/* sole or repeating event? */}
+        <Dialog
+          open={this.state.isSoleDialog}
+          onClose={this.handleIsSoleDialogClose}
+        >
+          <DialogTitle>Recurring</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              This is a recurring event. Do you want to select the event series
+              or the event occurrence?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.handleOccurence}>occurrence</Button>
+            <Button onClick={this.handleSeries} autoFocus>
+              series
+            </Button>
+          </DialogActions>
         </Dialog>
 
         <Dialog open={this.state.open} onClose={this.handleClose}>
@@ -1055,7 +1267,7 @@ class ReactCalendarBase extends Component {
                 }}
               >
                 {clientData.map(option => (
-                  <MenuItem key={option.value} value={option.client_full_name}>
+                  <MenuItem key={option.id} value={option.client_full_name}>
                     {option.client_full_name}
                   </MenuItem>
                 ))}
@@ -1076,7 +1288,7 @@ class ReactCalendarBase extends Component {
                 }}
               >
                 {therapistData.map(option => (
-                  <MenuItem key={option.value} value={option.member_full_name}>
+                  <MenuItem key={option.id} value={option.member_full_name}>
                     {option.member_full_name}
                   </MenuItem>
                 ))}
@@ -1117,7 +1329,7 @@ class ReactCalendarBase extends Component {
               </TextField>
               <MuiThemeProvider theme={theme}>
                 <MuiPickersUtilsProvider utils={MomentUtils}>
-                  <Grid container row>
+                  <Grid container>
                     <MuiThemeProvider theme={theme2}>
                       <DatePicker
                         inputVariant="outlined"
@@ -1141,7 +1353,7 @@ class ReactCalendarBase extends Component {
                 </MuiPickersUtilsProvider>
               </MuiThemeProvider>
               <MuiPickersUtilsProvider utils={MomentUtils}>
-                <Grid container row>
+                <Grid container>
                   <MuiThemeProvider theme={theme2}>
                     <DatePicker
                       margin="normal"
@@ -1378,7 +1590,7 @@ class ReactCalendarBase extends Component {
                   variant="outlined"
                   className={classes.textField2}
                   value={this.state.newNumOccurences}
-                  onChange={this.handleChange2("existingNumOccurences")}
+                  onChange={this.handleChange2("newNumOccurences")}
                   margin="normal"
                 />
               ) : null}
@@ -1444,4 +1656,4 @@ class ReactCalendarBase extends Component {
 
 ReactCalendarBase.propTypes = propTypes;
 
-export default withStyles(styles)(ReactCalendarBase);
+export default withRouter(withStyles(styles)(ReactCalendarBase));
