@@ -164,10 +164,9 @@ class EventService {
       }
     }
 
-    var sql =
-      "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, repeat_option, end_repeat, num_occurences ) VALUES";
-    for (var i = 0; i < start_dates.length; i++) {
-      sql +=
+    try {
+      let insertFirstSql =
+        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, custom_frequency, repeat_option, end_repeat, end_date_occurrence, num_occurences, repeat_num_days, sun, mon, tues, wed, thu, fri, sat) VALUES" +
         " ('" +
         newClient +
         "','" +
@@ -181,29 +180,99 @@ class EventService {
         "','" +
         newCategory +
         "','" +
-        start_dates[i] +
+        start_dates[0] +
         "','" +
-        end_dates[i] +
+        end_dates[0] +
         "','" +
         checkedRepeat +
+        "','" +
+        newCustomFreq +
         "','" +
         repeatOption +
         "','" +
         newEndRepeat +
         "','" +
+        endSelectedDate +
+        "','" +
         newNumOccurences +
+        "','" +
+        newRepeatEveryNumDays +
+        "','" +
+        sun +
+        "','" +
+        mon +
+        "','" +
+        tues +
+        "','" +
+        wed +
+        "','" +
+        thu +
+        "','" +
+        fri +
+        "','" +
+        sat +
         "')";
-      if (i < start_dates.length - 1) sql += ",";
-    }
-    try {
+
+      const firstQueryResult = await query(insertFirstSql);
+
+      let updateSQL = "UPDATE testevent SET series_start_id=? WHERE id=?";
+      query(updateSQL, [firstQueryResult.insertId, firstQueryResult.insertId]);
+      if (start_dates.length == 1)
+        // if it has no series of events.
+        return firstQueryResult;
+
+      var sql =
+        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, repeat_option, end_repeat, num_occurences,  series_start_id) VALUES";
+
+      for (let i = 1; i < start_dates.length; i++) {
+        sql +=
+          " ('" +
+          newClient +
+          "','" +
+          newBillType +
+          "','" +
+          newClient +
+          "','" +
+          newTherapist +
+          "','" +
+          newLocation +
+          "','" +
+          newCategory +
+          "','" +
+          start_dates[i] +
+          "','" +
+          end_dates[i] +
+          "','" +
+          checkedRepeat +
+          "','" +
+          repeatOption +
+          "','" +
+          newEndRepeat +
+          "','" +
+          newNumOccurences +
+          "'," +
+          firstQueryResult.insertId +
+          ")";
+        if (i < start_dates.length - 1) sql += ",";
+      }
+
       return await query(sql);
     } catch (error) {
-      console.log("df", error);
       throw error;
     }
   }
   static async deleteOne(id) {
     const sql = `DELETE FROM testevent WHERE id = ${id}`;
+
+    try {
+      return await query(sql);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async deleteSeries(id) {
+    const sql = `DELETE FROM testevent WHERE series_start_id = ${id}`;
 
     try {
       return await query(sql);
