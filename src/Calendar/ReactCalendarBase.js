@@ -190,7 +190,7 @@ class ReactCalendarBase extends Component {
       deleteSuccessSnackbarOpen: false,
       deleteFailureSnackbarOpen: false,
       isSoleDialog: false,
-      cal_events: [
+      calEvents: [
         //State is updated via componentDidMount
       ],
       therapistData: [],
@@ -229,9 +229,9 @@ class ReactCalendarBase extends Component {
       newRepeatEveryNumMonths: "",
       selectedDate: moment().format("YYYY-MM-DD HH:mm:ss"),
       endSelectedDate: moment().format("YYYY-MM-DD HH:mm:ss"),
-      redirect: false
+      redirect: false,
       // EXISTING EVENT
-      /* redirectDocs: false,
+      redirectDocs: false,
       attendance: "Present",
       existingBillType: "Billable",
       existingClientType: "Individual",
@@ -249,7 +249,7 @@ class ReactCalendarBase extends Component {
       existingEveryNumMonths: "",
       existingCheckedRepeat: false,
       existingNumOccurences: 0,
-      existingEndDateOccurrence: "" */
+      existingEndDateOccurrence: ""
     };
   }
 
@@ -278,7 +278,7 @@ class ReactCalendarBase extends Component {
       newClient: this.state.newClient,
       selectedDate: this.state.selectedDate,
       endSelectedDate: this.state.endSelectedDate,
-      checkedRepeat: this.state.checkedRepeat, //true,false
+      checkedRepeat: +this.state.checkedRepeat, //true,false
       repeatOption: this.state.repeatOption, //"Daily","Weekly","Monthly","Custom"
       newEndRepeat: this.state.newEndRepeat, //"After","On Date"
       newNumOccurences: this.state.newNumOccurences, //"4"
@@ -287,13 +287,13 @@ class ReactCalendarBase extends Component {
       newRepeatEveryNumDays: this.state.newRepeatEveryNumDays,
       newRepeatEveryNumWeeks: this.state.newRepeatEveryNumWeeks,
       newRepeatEveryNumMonths: this.state.newRepeatEveryNumMonths,
-      sun: this.state.sun,
-      mon: this.state.mon,
-      tues: this.state.tues,
-      wed: this.state.wed,
-      thu: this.state.thu,
-      fri: this.state.fri,
-      sat: this.state.sat
+      sun: +this.state.sun,
+      mon: +this.state.mon,
+      tues: +this.state.tues,
+      wed: +this.state.wed,
+      thu: +this.state.thu,
+      fri: +this.state.fri,
+      sat: +this.state.sat
     };
     console.log("submitobj", obj);
 
@@ -375,7 +375,7 @@ class ReactCalendarBase extends Component {
       const eventsResp = await API.get("/events");
       const therapistsResp = await API.get("/members/getTherapists");
       const clientsResp = await API.get("/clients/all");
-      const cal_events =
+      const calEvents =
         (eventsResp.data.data || []).map(event => {
           const { title, start, end, ...resource } = event;
           return {
@@ -390,7 +390,7 @@ class ReactCalendarBase extends Component {
 
       this.setState(
         {
-          cal_events,
+          calEvents,
           therapistData,
           clientData
         },
@@ -514,8 +514,12 @@ class ReactCalendarBase extends Component {
 
   /* show existing event dialog box */
   handleClickOpen2 = event => {
+    const { id, series_start_id } = event.resource;
+
+    const firstEvent = this.state.calEvents.find(
+      event => event.resource.series_start_id === series_start_id
+    );
     const {
-      id,
       title,
       bill_type,
       client,
@@ -535,12 +539,12 @@ class ReactCalendarBase extends Component {
       fri,
       sat,
       sun,
-      category,
-      series_start_id
-    } = event.resource;
+      category
+    } = firstEvent.resource;
 
-    if (repeats === "true") this.setState({ isSoleDialog: true });
+    if (Boolean(repeats)) this.setState({ isSoleDialog: true });
     else this.setState({ openExisting: true });
+
     this.setState({
       eventId: id,
       seriesStartId: series_start_id,
@@ -690,7 +694,7 @@ class ReactCalendarBase extends Component {
     const { classes } = this.props;
     //const classes = withStyles();
     const {
-      cal_events,
+      calEvents,
       therapistData,
       clientData,
       selectedDate,
@@ -708,10 +712,10 @@ class ReactCalendarBase extends Component {
           <Calendar
             className={classes.root}
             selectable
-            startAccessor={cal_events => new Date(cal_events.start)}
-            endAccessor={cal_events => new Date(cal_events.end)}
+            startAccessor={calEvents => new Date(calEvents.start)}
+            endAccessor={calEvents => new Date(calEvents.end)}
             localizer={localizer}
-            events={cal_events}
+            events={calEvents}
             views={["month", "week", "day"]}
             defaultDate={new Date()}
             defaultView="month"
@@ -724,6 +728,7 @@ class ReactCalendarBase extends Component {
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
+        {this.state.redirectDocs ? <Redirect push to="/documentation" /> : null}
 
         {/* existing dialog */}
         <Dialog
@@ -732,7 +737,7 @@ class ReactCalendarBase extends Component {
         >
           <form className={classes.container} noValidate autoComplete="off">
             <DialogContent>
-              <Grid direction row>
+              <Grid>
                 {!this.state.isShowRepeatOptionInExistingDalog && (
                   <IconButton onClick={this.handleRedirectDocs}>
                     <MuiThemeProvider theme={theme}>
@@ -1142,14 +1147,14 @@ class ReactCalendarBase extends Component {
                       className={classes.textField2}
                       margin="normal"
                       id="mui-pickers-date"
-                      label="End Repeat On"
+                      label="End On"
                       value={this.state.existingEndDateOccurrence}
                       onChange={this.handleChange2("existingEndDateOccurrence")}
                     />
                   </MuiThemeProvider>
                 </MuiPickersUtilsProvider>
               ) : null}
-              <Grid direction row>
+              <Grid>
                 <MuiThemeProvider theme={theme}>
                   <IconButton onClick={this.handleDeleteDialogOpen}>
                     <DeleteForeverIcon color="secondary" fontSize="large" />
