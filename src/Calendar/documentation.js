@@ -136,7 +136,7 @@ class Documentation extends React.Component {
     noteType: "Regular",
     attendanceType: "Present",
     sessionDate: "4/2/2019",
-    regNote: "this is my note",
+    regNote: "",
     s_note: "",
     o_note: "",
     a_note: "",
