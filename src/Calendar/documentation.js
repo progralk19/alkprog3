@@ -16,6 +16,7 @@ import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
+import moment from "moment";
 
 import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
 
@@ -129,23 +130,30 @@ const attendanceTypes = [
 
 class Documentation extends React.Component {
   state = {
-    anchorEl: null,
     clientData: [],
     therapistData: [],
-    client: "John Smith",
+    client: "",
     noteType: "Regular",
     attendanceType: "Present",
-    sessionDate: "4/2/2019",
+    sessionDate: "",
     regNote: "",
     s_note: "",
     o_note: "",
     a_note: "",
     p_note: "",
+    calID: "",
     checkedPayor: true,
     checkedFamily: false,
     checkedTherapist: false,
     checkedPortal: false
   };
+
+  componentDidMount() {
+    this.setState({
+      client: this.props.location.state.client,
+      sessionDate: this.props.location.state.sessionDate
+    });
+  }
 
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
@@ -158,6 +166,7 @@ class Documentation extends React.Component {
   render() {
     const { classes } = this.props;
 
+    //test
     // const {clientData, therapistData } = this.state;
 
     return (
@@ -183,11 +192,19 @@ class Documentation extends React.Component {
               margin="normal"
               variant="outlined"
             />
+            <TextField
+              id="client-textbox"
+              label="Calendar ID"
+              value={this.state.calID}
+              className={classes.textField}
+              margin="normal"
+              variant="outlined"
+            />
 
             <TextField
               id="session-date"
               label="Session Date"
-              value={this.state.sessionDate}
+              value={moment(this.state.sessionDate).format("MM-DD-YYYY")}
               className={classes.textField}
               margin="normal"
               variant="outlined"
