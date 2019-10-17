@@ -287,6 +287,9 @@ class ReactCalendarBase extends Component {
       newRepeatEveryNumDays: this.state.newRepeatEveryNumDays,
       newRepeatEveryNumWeeks: this.state.newRepeatEveryNumWeeks,
       newRepeatEveryNumMonths: this.state.newRepeatEveryNumMonths,
+      billingEmail: this.state.billingEmail,
+      sessionCost: this.state.sessionCost,
+      sessionLength: this.state.sessionLength,
       sun: +this.state.sun,
       mon: +this.state.mon,
       tues: +this.state.tues,
@@ -342,6 +345,9 @@ class ReactCalendarBase extends Component {
       newBillType: "",
       //newClientType: "",
       newClient: "",
+      billingEmail: "",
+      sessionCost: 0.0,
+      sessionLength: 0,
       newTherapist: "",
       newLocation: "",
       newCategory: "",
@@ -519,6 +525,11 @@ class ReactCalendarBase extends Component {
     const firstEvent = this.state.calEvents.find(
       event => event.resource.series_start_id === series_start_id
     );
+
+    const currentEvent = this.state.calEvents.find(
+      event => event.resource.id === id
+    );
+
     const {
       title,
       bill_type,
@@ -580,6 +591,8 @@ class ReactCalendarBase extends Component {
   };
 
   handleChange = name => event => {
+    if (name === "newClient" || name === "existingClient")
+      this.updateClientInfo(event.target.value);
     this.setState({
       [name]: event.target.value,
       newCustomFreq: "",
@@ -591,6 +604,37 @@ class ReactCalendarBase extends Component {
       fri: false,
       sat: false
     });
+  };
+
+  updateClientInfo = clientName => {
+    const { clientData } = this.state;
+    const currentClient = clientData.find(
+      client => client.client_full_name === clientName
+    );
+    if (currentClient) {
+      const {
+        billing_email,
+        session_length,
+        session_cost,
+        assi_therapist_full_name
+      } = currentClient;
+      this.setState(
+        {
+          billingEmail: billing_email,
+          sessionCost: session_cost,
+          sessionLength: session_length,
+          newTherapist: assi_therapist_full_name
+        },
+        () => {
+          console.log(
+            this.state.billingEmail,
+            this.state.sessionCost,
+            this.state.sessionLength,
+            this.state.newTherapist
+          );
+        }
+      );
+    }
   };
 
   handleChange2 = name => event => {
@@ -711,7 +755,7 @@ class ReactCalendarBase extends Component {
         <Container style={{ height: 1000 }} maxWidth="lg">
           <Calendar
             className={classes.root}
-            selectable
+            selectable={true}
             startAccessor={calEvents => new Date(calEvents.start)}
             endAccessor={calEvents => new Date(calEvents.end)}
             localizer={localizer}
@@ -728,7 +772,21 @@ class ReactCalendarBase extends Component {
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
-        {this.state.redirectDocs ? <Redirect push to="/documentation" /> : null}
+        {this.state.redirectDocs ? (
+          <Redirect
+            push
+            to={{
+              pathname: "/documentation",
+              state: {
+                client: this.state.existingClient,
+                sessionDate: this.state.existingStart,
+                // calNum: this.state.eventId,
+                calID: this.state.eventId
+                // moment(this.state.existingStart).format("MM-DD-YYYY") //.toString().substr(0, 10)
+              }
+            }}
+          />
+        ) : null}
 
         {/* existing dialog */}
         <Dialog
@@ -737,7 +795,7 @@ class ReactCalendarBase extends Component {
         >
           <form className={classes.container} noValidate autoComplete="off">
             <DialogContent>
-              <Grid>
+              <Grid container justify="flex-start">
                 {!this.state.isShowRepeatOptionInExistingDalog && (
                   <IconButton onClick={this.handleRedirectDocs}>
                     <MuiThemeProvider theme={theme}>
@@ -1154,7 +1212,7 @@ class ReactCalendarBase extends Component {
                   </MuiThemeProvider>
                 </MuiPickersUtilsProvider>
               ) : null}
-              <Grid>
+              <Grid container justify="flex-start">
                 <MuiThemeProvider theme={theme}>
                   <IconButton onClick={this.handleDeleteDialogOpen}>
                     <DeleteForeverIcon color="secondary" fontSize="large" />
@@ -1634,7 +1692,10 @@ class ReactCalendarBase extends Component {
                         this.state.newLocation,
                         this.state.newCategory,
                         this.state.selectedDate,
-                        this.state.endSelectedDate
+                        this.state.endSelectedDate,
+                        this.state.billingEmail,
+                        this.state.sessionCost,
+                        this.state.sessionLength
                         /* any other notable recurring ones will eventually be submitted */
                       );
                       //this.reloadPage();
