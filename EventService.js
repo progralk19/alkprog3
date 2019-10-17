@@ -35,6 +35,9 @@ class EventService {
     var thu = formdata.thu;
     var fri = formdata.fri;
     var sat = formdata.sat;
+    var billingEmail = formdata.billingEmail;
+    var sessionCost = formdata.sessionCost;
+    var sessionLength = formdata.sessionLength;
     var selected_days = [sun, mon, tues, wed, thu, fri, sat];
     var start_dates = [];
     var end_dates = [];
@@ -56,6 +59,7 @@ class EventService {
 
     var date_limit = moment(start_date_to_add).add(1, "seconds");
     var selectedDateOccurenceEnd = formdata.selectedDateOccurenceEnd; // repeat end date "2019-09-18 03:41:00"
+
     if (selectedDateOccurenceEnd) {
       var date_limit_str =
         selectedDateOccurenceEnd.substring(0, 10) +
@@ -63,6 +67,9 @@ class EventService {
         selectedDate.substring(11, 19);
       date_limit = moment(date_limit_str, "YYYY-MM-DD HH:mm:ss");
     }
+
+    if (selectedDateOccurenceEnd == "" || selectedDateOccurenceEnd == null)
+      selectedDateOccurenceEnd = selectedDate;
     //---------------------------------------------------------
 
     //these logs are added to response just for debugging
@@ -166,7 +173,7 @@ class EventService {
 
     try {
       let insertFirstSql =
-        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, custom_frequency, repeat_option, end_repeat, end_date_occurrence, num_occurences, repeat_num_days, sun, mon, tues, wed, thu, fri, sat) VALUES" +
+        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, custom_frequency, repeat_option, end_repeat, end_date_occurrence, num_occurences, repeat_num_days, sun, mon, tues, wed, thu, fri, sat, billing_email, session_cost, session_set_length) VALUES" +
         " ('" +
         newClient +
         "','" +
@@ -192,7 +199,7 @@ class EventService {
         "','" +
         newEndRepeat +
         "','" +
-        endSelectedDate +
+        selectedDateOccurenceEnd +
         "','" +
         newNumOccurences +
         "','" +
@@ -211,6 +218,12 @@ class EventService {
         fri +
         "','" +
         sat +
+        "','" +
+        billingEmail +
+        "','" +
+        sessionCost +
+        "','" +
+        sessionLength +
         "')";
 
       const firstQueryResult = await query(insertFirstSql);
@@ -277,6 +290,17 @@ class EventService {
     try {
       return await query(sql);
     } catch (error) {
+      throw error;
+    }
+  }
+
+  static async addDocNote(newOne) {
+    const sql = `UPDATE testevent SET attendance = ?,  notes = ?  WHERE id = ?`;
+    const { attendanceType, regNote, calID } = newOne;
+    try {
+      return await query(sql, [attendanceType, regNote, calID]);
+    } catch (error) {
+      console.log("exception: ", error);
       throw error;
     }
   }
