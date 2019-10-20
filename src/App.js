@@ -62,6 +62,7 @@ import NewClientHideInac from "./Client/NewClientHideInac";
 import NewMember from "./Member/NewMember";
 import NewMemberHideInac from "./Member/NewMemberHideInac";
 import ReactCalendarBaseCopy from "./Calendar/ReactCalendarBaseCopy";
+import AccountDetailsTable from "./Tables/accountDetailsTable";
 
 //width of drawer
 const drawerWidth = 240;
@@ -492,6 +493,17 @@ class MainApp extends React.Component {
                 <div>
                   <TitleBarAccountsInv />
                   <AccountsInvoicesTabs />
+                </div>
+              )}
+            />
+                
+                
+            <Route
+              exact
+              path="/accountsandinv/accountdetails"
+              render={() => (
+                <div>
+                  <AccountDetailsTable />
                 </div>
               )}
             />
