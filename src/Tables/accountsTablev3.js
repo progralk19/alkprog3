@@ -15,7 +15,7 @@ import TableRow from "@material-ui/core/TableRow";
 import TableSortLabel from "@material-ui/core/TableSortLabel";
 import Paper from "@material-ui/core/Paper";
 import Checkbox from "@material-ui/core/Checkbox";
-import Cyan from "@material-ui/core/colors/cyan";
+import Blue from "@material-ui/core/colors/blue";
 import Container from "@material-ui/core/Container";
 import { Redirect } from "react-router-dom";
 
@@ -95,7 +95,7 @@ const rows = [
 
 const CustomTableCell = withStyles(theme => ({
   head: {
-    backgroundColor: Cyan[800],
+    backgroundColor: Blue[800],
     color: theme.palette.common.white,
     fontSize: 17
   },
@@ -183,39 +183,6 @@ const styles = theme => ({
     "&:nth-of-type(odd)": {
       backgroundColor: theme.palette.background.default
     }
-  },
-  appBar: {
-    position: "relative",
-    backgroundColor: Cyan[800]
-  },
-  title: {
-    marginLeft: theme.spacing(2),
-    flex: 1
-  },
-
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1)
-    //width: 400
-  },
-  textField2: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 198
-  },
-  textField3: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: "60%"
-  },
-
-  root2: {
-    marginTop: theme.spacing(10)
-  },
-  letter: {
-    marginLeft: theme.spacing(10),
-    marginRight: theme.spacing(1),
-    marginTop: theme.spacing(5)
   }
 });
 
@@ -262,7 +229,7 @@ class AccountsTable extends React.Component {
   handleSelectAllClick = event => {
     if (event.target.checked) {
       this.setState(
-        state => ({ selected: state.accountData.map(n => n.id) }),
+        state => ({ selected: state.accountData.map(n => n.billing_email) }),
         () => this.props.onSelectedUpdated(this.state.selected)
       );
       return;
