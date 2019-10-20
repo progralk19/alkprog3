@@ -15,10 +15,11 @@ import TableRow from "@material-ui/core/TableRow";
 import TableSortLabel from "@material-ui/core/TableSortLabel";
 import Paper from "@material-ui/core/Paper";
 import Checkbox from "@material-ui/core/Checkbox";
-import Blue from "@material-ui/core/colors/blue";
+import Cyan from "@material-ui/core/colors/cyan";
 import Container from "@material-ui/core/Container";
+import { Redirect } from "react-router-dom";
 
-import axios from "axios";
+import API from "../utils/API";
 /*
 let counter = 0;
 function createData(name, role, email, phone, clients) {
@@ -26,6 +27,35 @@ function createData(name, role, email, phone, clients) {
   return { id: counter, name, role, email, phone, clients };
 }
 */
+
+// Warn if overriding existing method
+if (Array.prototype.equals)
+  console.warn(
+    "Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code."
+  );
+// attach the .equals method to Array's prototype to call it on any array
+Array.prototype.equals = function(array) {
+  // if the other array is a falsy value, return
+  if (!array) return false;
+
+  // compare lengths - can save a lot of time
+  if (this.length != array.length) return false;
+
+  for (var i = 0, l = this.length; i < l; i++) {
+    // Check if we have nested arrays
+    if (this[i] instanceof Array && array[i] instanceof Array) {
+      // recurse into the nested arrays
+      if (!this[i].equals(array[i])) return false;
+    } else if (this[i] != array[i]) {
+      // Warning - two different object instances will never be equal: {x:20} != {x:20}
+      return false;
+    }
+  }
+  return true;
+};
+// Hide method from for-in loops
+Object.defineProperty(Array.prototype, "equals", { enumerable: false });
+
 function desc(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
     return -1;
@@ -53,19 +83,19 @@ function getSorting(order, orderBy) {
 }
 
 const rows = [
-  { id: "account_last", disablePadding: true, label: "Account Holder" },
-  { id: "client_last", disablePadding: true, label: "Client" },
-  { id: "account_type", disablePadding: true, label: "Account Type" },
-  { id: "phone", disablePadding: true, label: "Phone" },
-  { id: "email", disablePadding: true, label: "Email" },
-  { id: "method", disablePadding: true, label: "Payment Method" },
+  { id: "payor", disablePadding: true, label: "Payor" },
+  { id: "client", disablePadding: true, label: "Client(s)" },
+  { id: "client_type", disablePadding: true, label: "Account Type" },
+  { id: "billing_phone", disablePadding: true, label: "Phone" },
+  { id: "billing_email", disablePadding: true, label: "Email" },
+  { id: "payment_type", disablePadding: true, label: "Payment Method" },
   { id: "bal", disablePadding: true, label: "Balance" },
   { id: "last_pay_date", label: "Last Payment Date" }
 ];
 
 const CustomTableCell = withStyles(theme => ({
   head: {
-    backgroundColor: Blue[800],
+    backgroundColor: Cyan[800],
     color: theme.palette.common.white,
     fontSize: 17
   },
@@ -74,7 +104,7 @@ const CustomTableCell = withStyles(theme => ({
   }
 }))(TableCell);
 
-class AccountsTableV3Head extends React.Component {
+class TransactionsTableHead extends React.Component {
   createSortHandler = property => event => {
     this.props.onRequestSort(event, property);
   };
@@ -125,7 +155,7 @@ class AccountsTableV3Head extends React.Component {
   }
 }
 
-AccountsTableV3Head.propTypes = {
+TransactionsTableHead.propTypes = {
   numSelected: PropTypes.number.isRequired,
   onSelectAllClick: PropTypes.func.isRequired,
   rowCount: PropTypes.number.isRequired,
@@ -139,8 +169,8 @@ AccountsTableV3Head.propTypes = {
 const styles = theme => ({
   root: {
     //width: "60%",
-    marginTop: theme.spacing.unit * 3,
-    // marginLeft: theme.spacing.unit * 30,
+    marginTop: theme.spacing(1) * 3,
+    // marginLeft: theme.spacing(1) * 30,
     overflowX: "auto"
   },
   table: {
@@ -156,7 +186,7 @@ const styles = theme => ({
   },
   appBar: {
     position: "relative",
-    backgroundColor: Blue[800]
+    backgroundColor: Cyan[800]
   },
   title: {
     marginLeft: theme.spacing(2),
@@ -201,58 +231,64 @@ const theme2 = createMuiTheme({
   }
 });
 
-class AccountsTableV3 extends React.Component {
+class AccountsTable extends React.Component {
   state = {
-    order: "",
+    order: "asc",
     orderBy: "",
     accountData: [],
     page: 0,
     rowsPerPage: 10,
     selected: [],
-    open: false
+    open: false,
+    redirect: false
   };
 
-  componentDidMount() {
-    axios
-      .get("http://localhost:5000/accounts")
-      .then(response => {
-        console.log("Got account data!");
-        console.log(response.data);
-        this.setState({
-          accountData: response.data
-        });
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
-    if (!this.state.intervalIsSet) {
-      let interval = setInterval(this.getDataFromDb, 1000);
-      this.setState({ intervalIsSet: interval });
-      console.log("Account interval set!");
-    }
+  async componentDidMount() {
+    await this.updateTableContent();
   }
 
-  componentWillUnmount() {
-    if (this.state.intervalIsSet) {
-      clearInterval(this.state.intervalIsSet);
-      this.setState({ intervalIsSet: null });
-      console.log("Unmounted from account data!");
+  async updateTableContent() {
+    try {
+      const accountsResp = await API.get("/accounts/accounts");
+      const accountData = accountsResp.data.data;
+
+      this.setState({ accountData });
+    } catch (error) {
+      console.log("Accounts data fetching error: ", error);
     }
   }
+  componentWillUnmount() {}
 
   handleSelectAllClick = event => {
     if (event.target.checked) {
-      this.setState(state => ({ selected: state.accountData.map(n => n.id) }));
+      this.setState(
+        state => ({ selected: state.accountData.map(n => n.id) }),
+        () => this.props.onSelectedUpdated(this.state.selected)
+      );
       return;
     }
-    this.setState({ selected: [] });
+    this.setState({ selected: [] }, () =>
+      this.props.onSelectedUpdated(this.state.selected)
+    );
   };
+
+  async componentDidUpdate(prevProps, prevState) {
+    if (prevProps.toggleUpdated !== this.props.toggleUpdated) {
+      await this.updateTableContent();
+    }
+
+    // const { selected } = this.state
+    // const { prevSelected } = prevState
+
+    // if (selected.equals(prevSelected) === false)
+    // this.props.onSelectedUpdated(selected)
+    // console.log('selected', selected)
+  }
 
   handleClick = (event, id) => {
     const { selected } = this.state;
     const selectedIndex = selected.indexOf(id);
     let newSelected = [];
-
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
     } else if (selectedIndex === 0) {
@@ -265,6 +301,7 @@ class AccountsTableV3 extends React.Component {
         selected.slice(selectedIndex + 1)
       );
     }
+    this.props.onSelectedUpdated(newSelected);
 
     this.setState({ selected: newSelected });
   };
@@ -298,6 +335,11 @@ class AccountsTableV3 extends React.Component {
     this.setState({ open: false });
   };
 
+  //redirect to client details;
+  handleClickRedirect = () => {
+    this.setState({ redirect: true });
+  };
+
   isSelected = id => this.state.selected.indexOf(id) !== -1;
 
   render() {
@@ -316,47 +358,63 @@ class AccountsTableV3 extends React.Component {
 
     return (
       <Container maxWidth="lg">
+        {this.state.redirect ? (
+          <Redirect
+            to={{
+              pathname: "/accountsandinv/accountdetails"
+            }}
+          />
+        ) : null}
+
         <Paper className={classes.root}>
           <div className={classes.tableWrapper}>
             <Table /* className={classes.table} */ aria-labelledby="tableTitle">
-              <AccountsTableV3Head
+              <TransactionsTableHead
                 numSelected={selected.length}
                 order={order}
                 orderBy={orderBy}
                 onRequestSort={this.handleRequestSort}
                 onSelectAllClick={this.handleSelectAllClick}
-                rowCount={accountData.length}
+                rowCount={accountData.length || 0}
               />
               <TableBody>
                 {stableSort(accountData, getSorting(order, orderBy))
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map(n => {
-                    const isSelected = this.isSelected(n.id);
+                  .map((n, i) => {
+                    const isSelected = this.isSelected(n.billing_email);
                     return (
                       <TableRow
                         hover
                         className={classes.row}
-                        onClick={event => this.handleClick(event, n.id)}
                         tabIndex={-1}
-                        key={n.id}
+                        key={i}
                         selected={isSelected}
                       >
                         <TableCell padding="checkbox">
                           <MuiThemeProvider theme={theme}>
-                            <Checkbox color="primary" checked={isSelected} />
+                            <Checkbox
+                              color="primary"
+                              checked={isSelected}
+                              onClick={event =>
+                                this.handleClick(event, n.billing_email)
+                              }
+                            />
                           </MuiThemeProvider>
                         </TableCell>
 
-                        <TableCell align="center">
-                          {n.account_last}, {n.account_first}
+                        <TableCell
+                          onClick={() =>
+                            this.handleClickRedirect(n.billing_email)
+                          }
+                          align="center"
+                        >
+                          {n.payor}{" "}
                         </TableCell>
-                        <TableCell align="center">
-                          {n.client_last}, {n.client_first}
-                        </TableCell>
-                        <TableCell align="center">{n.account_type}</TableCell>
-                        <TableCell align="center">{n.phone}</TableCell>
-                        <TableCell align="center">{n.email}</TableCell>
-                        <TableCell align="center">{n.method}</TableCell>
+                        <TableCell align="center">{n.client}</TableCell>
+                        <TableCell align="center">{n.client_type}</TableCell>
+                        <TableCell align="center">{n.billing_phone}</TableCell>
+                        <TableCell align="center">{n.billing_email}</TableCell>
+                        <TableCell align="center">{n.payment_type}</TableCell>
                         <TableCell align="center">{n.bal}</TableCell>
                         <TableCell align="center">{n.last_pay_date}</TableCell>
                       </TableRow>
@@ -391,8 +449,8 @@ class AccountsTableV3 extends React.Component {
   }
 }
 
-AccountsTableV3.propTypes = {
+AccountsTable.propTypes = {
   classes: PropTypes.object.isRequired
 };
 
-export default withStyles(styles)(AccountsTableV3);
+export default withStyles(styles)(AccountsTable);
