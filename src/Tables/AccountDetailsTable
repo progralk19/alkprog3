@@ -10,7 +10,7 @@ import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
 import TableSortLabel from "@material-ui/core/TableSortLabel";
 import Paper from "@material-ui/core/Paper";
-import Cyan from "@material-ui/core/colors/cyan";
+import Blue from "@material-ui/core/colors/blue";
 import Container from "@material-ui/core/Container";
 import { Redirect } from "react-router-dom";
 
@@ -52,7 +52,7 @@ const rows = [
 
 const CustomTableCell = withStyles(theme => ({
   head: {
-    backgroundColor: Cyan[800],
+    backgroundColor: Blue[800],
     color: theme.palette.common.white,
     fontSize: 18
   },
