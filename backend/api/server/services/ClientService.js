@@ -1,4 +1,5 @@
-import { query } from "./connection";
+// import { query } from "./connection";
+var query = require("./connection");
 
 class ClientService {
   static async getAllClients() {
@@ -206,4 +207,5 @@ class ClientService {
   }
 }
 
-export default ClientService;
+// export default ClientService;
+module.exports = ClientService;

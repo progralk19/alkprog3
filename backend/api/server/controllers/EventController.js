@@ -1,5 +1,7 @@
-import EventService from "../services/EventService";
-import Util from "../utils/Utils";
+//import EventService from "../services/EventService";
+var EventService = require("../services/EventService");
+//import Util from "../utils/Utils";
+var Util = require("../utils/Utils");
 
 const util = new Util();
 
@@ -94,4 +96,5 @@ class EventController {
   }
 }
 
-export default EventController;
+//export default EventController;
+module.exports = EventController;

@@ -1,5 +1,7 @@
-import ClientService from "../services/ClientService";
-import Util from "../utils/Utils";
+//import ClientService from "../services/ClientService";
+var ClientService = require("../services/ClientService");
+//import Util from "../utils/Utils";
+var Util = require("../utils/Utils");
 
 const util = new Util();
 
@@ -70,4 +72,5 @@ class ClientController {
   }
 }
 
-export default ClientController;
+// export default ClientController;
+module.exports = ClientController;

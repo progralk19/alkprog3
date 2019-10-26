@@ -1,5 +1,7 @@
-import { query } from "./connection";
-import moment from "moment";
+//import { query } from "./connection";
+var query = require("./connection");
+//import moment from "moment";
+var moment = require("moment");
 
 class EventService {
   static async getAll() {
@@ -312,4 +314,5 @@ class EventService {
   }
 }
 
-export default EventService;
+//export default EventService;
+module.exports = EventService;

@@ -1,5 +1,8 @@
-import mysql from "mysql";
-import util from "util";
+//import mysql from "mysql";
+var mysql = require("mysql");
+var util = require("util");
+
+//import util from "util";
 
 const conn = mysql.createConnection({
   host: "localhost",
@@ -18,5 +21,6 @@ conn.connect(err => {
 });
 
 const query = util.promisify(conn.query).bind(conn);
-export { query };
-export default conn;
+module.exports = query;
+//export { query };
+//export default conn;

@@ -1,5 +1,7 @@
-import MemberService from "../services/MemberService";
-import Util from "../utils/Utils";
+// import MemberService from "../services/MemberService";
+var MemberService = require("../services/MemberService");
+//import Util from "../utils/Utils";
+var Util = require("../utils/Utils");
 //test comment
 const util = new Util();
 
@@ -47,4 +49,5 @@ class MemberController {
   }
 }
 
-export default MemberController;
+//export default MemberController;
+module.exports = MemberController;

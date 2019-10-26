@@ -1,4 +1,6 @@
-import { query } from "./connection";
+//import { query } from "./connection";
+var query = require("./connection");
+//var query = connection.query();
 
 class MemberService {
   static async getAllMembers() {
@@ -117,4 +119,5 @@ class MemberService {
   */
 }
 
-export default MemberService;
+//export default MemberService;
+module.exports = MemberService;
