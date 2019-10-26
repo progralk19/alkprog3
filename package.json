@@ -32,6 +32,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "__NOTE__": "This line below is for running the backend",
     "backend": "node backend/api/index.js"
   },
   "eslintConfig": {

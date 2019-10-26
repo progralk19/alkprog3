@@ -21,7 +21,7 @@ const eventRoutes = require("./server/routes/EventRoutes");
 config.config();
 
 const app = express();
-/*
+
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
   res.header(
@@ -32,7 +32,6 @@ app.use(function(req, res, next) {
 
   next();
 });
-*/
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
