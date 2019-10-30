@@ -179,6 +179,24 @@ const categories = [
   }
 ];
 
+const CustomToolbar = ({label, onNavigate, view, onView}) => {
+  return (
+    <div className="rbc-toolbar">
+      <span className="rbc-btn-group">
+        <button type="button" onClick={() => onNavigate('PREV')}>Back</button>
+        <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
+        <button type="button" onClick={() => onNavigate('NEXT')}>Next</button>
+      </span>
+      <span className="rbc-toolbar-label" style={{fontSize: "18px"}}>{label}</span>
+      <span className="rbc-btn-group">
+        <button type="button" classNames={view === "month" ? "rbc-active" : ""} onClick={() => onView('month')}>Month</button>
+        <button type="button" className={view === "week" ? "rbc-active" : ""} onClick={() => onView('week')}>Week</button>
+        <button type="button" className={view === "day" ? "rbc-active" : ""} onClick={() => onView('day')}>Day</button>
+      </span>
+    </div>
+  );
+}
+
 const DefaultEventWrapper = ({children, value}) => {
   if (moment(CURRENT_DATE).isSame(value, 'day')) {
     return React.cloneElement(Children.only(children), {
@@ -796,7 +814,11 @@ class ReactCalendarBase extends Component {
               // custom wrapper here
               // so that it actually gets used
               eventWrapper: DefaultEventWrapper,
+              toolbar: CustomToolbar
             }}
+            // slotPropGetter={(date) => {
+            //   console.log(date)
+            // }}
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
