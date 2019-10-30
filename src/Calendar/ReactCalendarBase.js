@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Children } from "react";
 import { withRouter } from "react-router";
 
 //import BigCalendar from "react-big-calendar";
@@ -45,6 +45,7 @@ import API from "../utils/API";
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
 moment().toDate();
+const CURRENT_DATE = moment().toDate();
 
 const styles = theme => ({
   root: {
@@ -177,6 +178,23 @@ const categories = [
     label: "None"
   }
 ];
+
+const DefaultEventWrapper = ({children, value}) => {
+  if (moment(CURRENT_DATE).isSame(value, 'day')) {
+    return React.cloneElement(Children.only(children), {
+        style: {
+          ...children.style,
+          backgroundColor: '#80cbc4'
+        },
+    });
+  } else {
+    return React.cloneElement(Children.only(children), {
+        style: {
+          ...children.style
+        },
+    });
+  }
+}
 
 class ReactCalendarBase extends Component {
   constructor(...args) {
@@ -774,6 +792,11 @@ class ReactCalendarBase extends Component {
             min={new Date(2000, 1, 1, 8)}
             // this sets the end time of 8pm)
             max={new Date(2000, 1, 1, 20)}
+            components={{
+              // custom wrapper here
+              // so that it actually gets used
+              eventWrapper: DefaultEventWrapper,
+            }}
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
