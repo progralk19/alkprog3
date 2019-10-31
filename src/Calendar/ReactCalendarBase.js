@@ -287,7 +287,13 @@ class ReactCalendarBase extends Component {
       existingEveryNumMonths: "",
       existingCheckedRepeat: false,
       existingNumOccurences: 0,
-      existingEndDateOccurrence: ""
+      existingEndDateOccurrence: "",
+      filters: {
+        therapist: "All",
+        client: "All",
+        category: "All"
+      },
+      filteredCalEvents: []
     };
   }
 
@@ -431,12 +437,13 @@ class ReactCalendarBase extends Component {
         }) || [];
       const therapistData = therapistsResp.data.data || [];
       const clientData = clientsResp.data.data || [];
-
+      const filteredCalEvents = calEvents.slice();
       this.setState(
         {
           calEvents,
           therapistData,
-          clientData
+          clientData,
+          filteredCalEvents
         },
         () => {
           // this.changeContentWithClientId()
@@ -775,6 +782,45 @@ class ReactCalendarBase extends Component {
   }
   */
 
+  handleTherapistFilterChange = event => {
+    const filters = {
+      therapist: event.target.value,
+      client: this.state.filters.client,
+      category: this.state.filters.category
+    }
+    this.handleFilterChanges(filters);
+  };
+
+  handleClientFilterChange = event => {
+    const filters = {
+      therapist: this.state.filters.therapist,
+      client: event.target.value,
+      category: this.state.filters.category
+    }
+    this.handleFilterChanges(filters);
+  };
+
+  handleCategoryFilterChange = event => {
+    const filters = {
+      therapist: this.state.filters.therapist,
+      client: this.state.filters.client,
+      category: event.target.value
+    }
+    this.handleFilterChanges(filters);
+  };
+
+  handleFilterChanges = (filters) => {
+    const {calEvents} = this.state;
+    console.log(filters)
+    
+    const filteredCalEvents = filters.therapist !== 'All' ? calEvents.filter(val => val.resource.therapist === filters.therapist) : calEvents;
+
+    const filteredCalEvents1 = filters.client !== 'All' ? filteredCalEvents.filter(val => val.resource.client === filters.client) : filteredCalEvents;
+
+    const filteredCalEvents2 = filters.category !== 'All' ? filteredCalEvents1.filter(val => val.resource.category === filters.category) : filteredCalEvents1;
+    this.setState({filters, filteredCalEvents: filteredCalEvents2});
+  }
+
   render() {
     const { classes } = this.props;
     //const classes = withStyles();
@@ -783,7 +829,9 @@ class ReactCalendarBase extends Component {
       therapistData,
       clientData,
       selectedDate,
-      endSelectedDate
+      endSelectedDate,
+      filteredCalEvents,
+      filters
     } = this.state;
     /*
     if (this.state.redirect) {
@@ -794,13 +842,80 @@ class ReactCalendarBase extends Component {
     return (
       <div>
         <Container style={{ height: 1000 }} maxWidth="lg">
+          <TextField
+            id="therapistFilter"
+            select
+            label="Therapist"
+            className={classes.textField2}
+            value={filters.therapist}
+            onChange={this.handleTherapistFilterChange}
+            margin="normal"
+            variant="outlined"
+            SelectProps={{
+              MenuProps: {
+                className: classes.menu
+              }
+            }}
+          >
+            <MenuItem value="All" key="therapist-0">All</MenuItem>
+            {
+              therapistData.map((value, index) => {
+                return <MenuItem value={value.member_full_name} key={`therapist-${index+1}`}>{value.member_full_name}</MenuItem>
+              })
+            }
+          </TextField>
+          <TextField
+            id="clientFilter"
+            select
+            label="Client"
+            className={classes.textField2}
+            value={filters.client}
+            onChange={this.handleClientFilterChange}
+            margin="normal"
+            variant="outlined"
+            SelectProps={{
+              MenuProps: {
+                className: classes.menu
+              }
+            }}
+          >
+            <MenuItem value="All" key="client-0">All</MenuItem>
+            {
+              clientData.map((value, index) => {
+                return <MenuItem value={value.client_full_name} key={`client-${index+1}`}>{value.client_full_name}</MenuItem>
+              })
+            }
+          </TextField>
+          <TextField
+            id="categoryFilter"
+            select
+            label="Category"
+            className={classes.textField2}
+            value={filters.category}
+            onChange={this.handleCategoryFilterChange}
+            margin="normal"
+            variant="outlined"
+            SelectProps={{
+              MenuProps: {
+                className: classes.menu
+              }
+            }}
+          >
+            <MenuItem value="All" key="category-0">All</MenuItem>
+            {
+              categories.map((value, index) => {
+                return <MenuItem value={value.value} key={`category-${index+1}`}>{value.value}</MenuItem>
+              })
+            }
+          </TextField>
+
           <Calendar
             className={classes.root}
             selectable={true}
             startAccessor={calEvents => new Date(calEvents.start)}
             endAccessor={calEvents => new Date(calEvents.end)}
             localizer={localizer}
-            events={calEvents}
+            events={filteredCalEvents}
             views={["month", "week", "day"]}
             defaultDate={new Date()}
             defaultView="month"
