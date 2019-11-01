@@ -189,7 +189,7 @@ const CustomToolbar = ({label, onNavigate, view, onView}) => {
       </span>
       <span className="rbc-toolbar-label" style={{fontSize: "18px"}}>{label}</span>
       <span className="rbc-btn-group">
-        <button type="button" classNames={view === "month" ? "rbc-active" : ""} onClick={() => onView('month')}>Month</button>
+        <button type="button" className={view === "month" ? "rbc-active" : ""} onClick={() => onView('month')}>Month</button>
         <button type="button" className={view === "week" ? "rbc-active" : ""} onClick={() => onView('week')}>Week</button>
         <button type="button" className={view === "day" ? "rbc-active" : ""} onClick={() => onView('day')}>Day</button>
       </span>
@@ -197,21 +197,19 @@ const CustomToolbar = ({label, onNavigate, view, onView}) => {
   );
 }
 
-const DefaultEventWrapper = ({children, value}) => {
-  if (moment(CURRENT_DATE).isSame(value, 'day')) {
-    return React.cloneElement(Children.only(children), {
-        style: {
-          ...children.style,
-          backgroundColor: '#80cbc4'
-        },
-    });
-  } else {
-    return React.cloneElement(Children.only(children), {
-        style: {
-          ...children.style
-        },
-    });
-  }
+const DefaultEventWrapper = ({event, onSelect, onClick, localizer, selected, label, type}) => {
+    return (
+      type === "date" ? (
+        <div tabIndex="0" className="rbc-event" style={{backgroundColor: '#80cbc4'}} onClick={() => onSelect(event)}>
+          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")};<br />{event.resource.client} ({event.resource.therapist})</div>
+        </div>
+      ) : (
+        <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={{backgroundColor: '#80cbc4'}} onClick={() => onClick()}>
+          <div className="rbc-event-label">{label}</div>
+          <div className="rbc-event-content">{event.resource.client} ({event.resource.therapist})</div>
+        </div>
+      )
+    );
 }
 
 class ReactCalendarBase extends Component {
