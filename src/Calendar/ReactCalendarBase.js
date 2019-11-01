@@ -198,18 +198,30 @@ const CustomToolbar = ({label, onNavigate, view, onView}) => {
 }
 
 const DefaultEventWrapper = ({event, onSelect, onClick, localizer, selected, label, type}) => {
-    return (
-      type === "date" ? (
-        <div tabIndex="0" className="rbc-event" style={{backgroundColor: '#80cbc4'}} onClick={() => onSelect(event)}>
-          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")};<br />{event.resource.client} ({event.resource.therapist})</div>
-        </div>
-      ) : (
-        <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={{backgroundColor: '#80cbc4'}} onClick={() => onClick()}>
-          <div className="rbc-event-label">{label}</div>
-          <div className="rbc-event-content">{event.resource.client} ({event.resource.therapist})</div>
-        </div>
-      )
-    );
+  return (
+    type === "date" ? (
+      <div tabIndex="0" className="rbc-event" style={{backgroundColor: '#80cbc4'}} onClick={() => onSelect(event)}>
+        <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")};<br />{event.resource.client} ({event.resource.therapist})</div>
+      </div>
+    ) : (
+      <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={{backgroundColor: '#80cbc4'}} onClick={() => onClick()}>
+        <div className="rbc-event-label">{label}</div>
+        <div className="rbc-event-content">{event.resource.client} ({event.resource.therapist})</div>
+      </div>
+    )
+  );
+}
+
+const customDayPropGetter = date => {
+  
+  if (moment(CURRENT_DATE).isSame(date, 'day'))
+    return {
+      className: 'current-day',
+      style: {
+        backgroundColor: '#b2dfdb'
+      },
+    }
+  else return {}
 }
 
 class ReactCalendarBase extends Component {
@@ -809,7 +821,6 @@ class ReactCalendarBase extends Component {
 
   handleFilterChanges = (filters) => {
     const {calEvents} = this.state;
-    console.log(filters)
     
     const filteredCalEvents = filters.therapist !== 'All' ? calEvents.filter(val => val.resource.therapist === filters.therapist) : calEvents;
 
@@ -919,6 +930,7 @@ class ReactCalendarBase extends Component {
             defaultView="month"
             onSelectEvent={this.handleClickOpen2}
             onSelectSlot={this.handleClickOpen}
+            dayPropGetter={customDayPropGetter}
             // (this sets the start time of 8am)
             min={new Date(2000, 1, 1, 8)}
             // this sets the end time of 8pm)
