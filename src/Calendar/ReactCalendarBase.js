@@ -42,6 +42,8 @@ import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
 
 import API from "../utils/API";
 
+import { SketchPicker } from 'react-color';
+
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
 moment().toDate();
@@ -75,6 +77,21 @@ const styles = theme => ({
   },
   root3: {
     width: "100%"
+  },
+  categoryButton: {
+    marginTop: theme.spacing(2),
+    marginRight: theme.spacing(2),
+    /* this is text color */ color: theme.palette.getContrastText("#b2dfdb"),
+    backgroundColor: "#b2dfdb",
+    "&:hover": {
+      backgroundColor: "#80cbc4"
+    }
+  },
+  colorPicker: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(2)
   }
 });
 
@@ -173,10 +190,6 @@ const customFreqOptions = [
 ];
 
 const categories = [
-  {
-    value: "None",
-    label: "None"
-  }
 ];
 
 const eventEdgeColor = (attendance) => {
@@ -323,7 +336,13 @@ class ReactCalendarBase extends Component {
         client: "All",
         category: "All"
       },
-      filteredCalEvents: []
+      filteredCalEvents: [],
+      isNewCategoryDialog: false,
+      newCategoryData: {
+        label: "",
+        value: "",
+        color: "#000000"
+      }
     };
   }
 
@@ -850,6 +869,57 @@ class ReactCalendarBase extends Component {
     this.setState({filters, filteredCalEvents: filteredCalEvents2});
   }
 
+  handleNewCategoryDialogOpen = () => {
+    this.setState({isNewCategoryDialog: true});
+  }
+
+  handleNewCategorySave = () => {
+    const { newCategoryData } = this.state;
+
+    if (newCategoryData.value) {
+      categories.push(newCategoryData);
+      console.log(categories)
+      this.setState(
+        {
+          newCategoryData: {
+            label: "",
+            value: "",
+            color: "#000000"
+          },
+          isNewCategoryDialog: false
+        }
+      );
+    }
+  }
+
+  handleNewCategoryCancel = () => {
+    this.setState(
+      {
+        newCategoryData: {
+          label: "",
+          value: "",
+          color: "#000000"
+        },
+        isNewCategoryDialog: false
+      }
+    );
+  }
+
+  handleNewCategoryNameChanges = (e)  => {
+    const {newCategoryData} = this.state;
+    newCategoryData.value = e.target.value;
+    newCategoryData.label = e.target.value;
+
+    this.setState(newCategoryData);
+  }
+
+  handleNewCategoryColorChange = (color) => {
+    const {newCategoryData} = this.state;
+    newCategoryData.color = color.hex;
+
+    this.setState(newCategoryData);
+  } 
+
   render() {
     const { classes } = this.props;
     //const classes = withStyles();
@@ -937,6 +1007,46 @@ class ReactCalendarBase extends Component {
               })
             }
           </TextField>
+
+          <Button
+            className={classes.categoryButton}
+            size="large"
+            variant="contained"
+            onClick={() => this.handleNewCategoryDialogOpen()}
+          >
+            New Category
+          </Button>
+
+          <Dialog
+            open={this.state.isNewCategoryDialog}
+            onClose={this.handleNewCategoryCancel}
+          >
+            <DialogTitle>New Category</DialogTitle>
+            <DialogContent>
+              <TextField
+                required
+                id="new_category_value"
+                label="Category Name"
+                className={classes.textField}
+                value={this.state.newCategoryData.value}
+                onChange={e => this.handleNewCategoryNameChanges(e)}
+                margin="normal"
+                variant="outlined"
+              />
+              <SketchPicker
+                className={classes.colorPicker}
+                width="380px"
+                color={ this.state.newCategoryData.color }
+                onChange={this.handleNewCategoryColorChange}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.handleNewCategorySave()}>save</Button>
+              <Button onClick={() => this.handleNewCategoryCancel()} autoFocus>
+                cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
 
           <Calendar
             className={classes.root}
