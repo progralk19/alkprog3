@@ -230,12 +230,18 @@ const CustomToolbar = ({label, onNavigate, view, onView}) => {
   );
 }
 
-const DefaultEventWrapper = ({event, onSelect, onClick, localizer, selected, label, type}) => {
+const DefaultEventWrapper = ({event, onSelect, onClick, selected, label, type, children}) => {
   return (
     type === "date" ? (
-      <div tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
-        <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")};<br />{event.resource.client} ({event.resource.therapist})</div>
-      </div>
+      children.props.type === "popup" ? (
+        <div type="popup" tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
+          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")}; {event.resource.client} ({event.resource.therapist})</div>
+        </div>
+      ) : (
+        <div tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
+          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")}; {event.resource.client} ({event.resource.therapist})</div>
+        </div>
+      )
     ) : (
       <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={eventEdgeColor(event.resource.attendance)} onClick={() => onClick()}>
         <div className="rbc-event-label">{label}</div>
@@ -878,7 +884,6 @@ class ReactCalendarBase extends Component {
 
     if (newCategoryData.value) {
       categories.push(newCategoryData);
-      console.log(categories)
       this.setState(
         {
           newCategoryData: {
@@ -1065,6 +1070,7 @@ class ReactCalendarBase extends Component {
             min={new Date(2000, 1, 1, 8)}
             // this sets the end time of 8pm)
             max={new Date(2000, 1, 1, 20)}
+            popup={true}
             components={{
               // custom wrapper here
               // so that it actually gets used
