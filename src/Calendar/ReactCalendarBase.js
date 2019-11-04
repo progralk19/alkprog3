@@ -24,6 +24,7 @@ import FormLabel from "@material-ui/core/FormLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForeverOutlined";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./calendarStyle.css";
 import MomentUtils from "@date-io/moment";
 import {
   MuiPickersUtilsProvider,
