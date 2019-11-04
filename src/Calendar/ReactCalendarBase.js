@@ -179,6 +179,26 @@ const categories = [
   }
 ];
 
+const eventEdgeColor = (attendance) => {
+  let edgeColor;
+  if (attendance === 'Present ($)') {
+    edgeColor = 'green';
+  } else if (attendance === 'Absent, no notice ($)') {
+    edgeColor = 'red';
+  } else if (attendance === 'Absent, notice') {
+    edgeColor = 'yellow';
+  }
+  
+  return attendance ? {
+    border: "none",
+    backgroundColor: "#80cbc4",
+    borderLeft: "5px solid " + edgeColor
+  } : {
+    border: "none",
+    backgroundColor: "#80cbc4"
+  }
+}
+
 const CustomToolbar = ({label, onNavigate, view, onView}) => {
   return (
     <div className="rbc-toolbar">
@@ -200,11 +220,11 @@ const CustomToolbar = ({label, onNavigate, view, onView}) => {
 const DefaultEventWrapper = ({event, onSelect, onClick, localizer, selected, label, type}) => {
   return (
     type === "date" ? (
-      <div tabIndex="0" className="rbc-event" style={{backgroundColor: '#80cbc4'}} onClick={() => onSelect(event)}>
+      <div tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
         <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")};<br />{event.resource.client} ({event.resource.therapist})</div>
       </div>
     ) : (
-      <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={{backgroundColor: '#80cbc4'}} onClick={() => onClick()}>
+      <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={eventEdgeColor(event.resource.attendance)} onClick={() => onClick()}>
         <div className="rbc-event-label">{label}</div>
         <div className="rbc-event-content">{event.resource.client} ({event.resource.therapist})</div>
       </div>
