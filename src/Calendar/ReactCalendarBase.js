@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Children } from "react";
 import { withRouter } from "react-router";
 
 //import BigCalendar from "react-big-calendar";
@@ -24,6 +24,7 @@ import FormLabel from "@material-ui/core/FormLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForeverOutlined";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "./calendarStyle.css";
 import MomentUtils from "@date-io/moment";
 import {
   MuiPickersUtilsProvider,
@@ -42,9 +43,12 @@ import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
 
 import API from "../utils/API";
 
+import { SketchPicker } from 'react-color';
+
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
 moment().toDate();
+const CURRENT_DATE = moment().toDate();
 
 const styles = theme => ({
   root: {
@@ -74,6 +78,21 @@ const styles = theme => ({
   },
   root3: {
     width: "100%"
+  },
+  categoryButton: {
+    marginTop: theme.spacing(2),
+    marginRight: theme.spacing(2),
+    /* this is text color */ color: theme.palette.getContrastText("#b2dfdb"),
+    backgroundColor: "#b2dfdb",
+    "&:hover": {
+      backgroundColor: "#80cbc4"
+    }
+  },
+  colorPicker: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(2)
   }
 });
 
@@ -172,11 +191,78 @@ const customFreqOptions = [
 ];
 
 const categories = [
-  {
-    value: "None",
-    label: "None"
-  }
 ];
+
+const eventEdgeColor = (attendance) => {
+  let edgeColor;
+  if (attendance === 'Present ($)') {
+    edgeColor = 'green';
+  } else if (attendance === 'Absent, no notice ($)') {
+    edgeColor = 'red';
+  } else if (attendance === 'Absent, notice') {
+    edgeColor = 'yellow';
+  }
+  
+  return attendance ? {
+    border: "none",
+    backgroundColor: "#80cbc4",
+    borderLeft: "5px solid " + edgeColor
+  } : {
+    border: "none",
+    backgroundColor: "#80cbc4"
+  }
+}
+
+const CustomToolbar = ({label, onNavigate, view, onView}) => {
+  return (
+    <div className="rbc-toolbar">
+      <span className="rbc-btn-group">
+        <button type="button" onClick={() => onNavigate('PREV')}>Back</button>
+        <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
+        <button type="button" onClick={() => onNavigate('NEXT')}>Next</button>
+      </span>
+      <span className="rbc-toolbar-label" style={{fontSize: "18px"}}>{label}</span>
+      <span className="rbc-btn-group">
+        <button type="button" className={view === "month" ? "rbc-active" : ""} onClick={() => onView('month')}>Month</button>
+        <button type="button" className={view === "week" ? "rbc-active" : ""} onClick={() => onView('week')}>Week</button>
+        <button type="button" className={view === "day" ? "rbc-active" : ""} onClick={() => onView('day')}>Day</button>
+      </span>
+    </div>
+  );
+}
+
+const DefaultEventWrapper = ({event, onSelect, onClick, selected, label, type, children}) => {
+  return (
+    type === "date" ? (
+      children.props.type === "popup" ? (
+        <div type="popup" tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
+          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")}; {event.resource.client} ({event.resource.therapist})</div>
+        </div>
+      ) : (
+        <div tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
+          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")}; {event.resource.client} ({event.resource.therapist})</div>
+        </div>
+      )
+    ) : (
+      <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={eventEdgeColor(event.resource.attendance)} onClick={() => onClick()}>
+        <div className="rbc-event-label">{label}</div>
+        <div className="rbc-event-content">{event.resource.client} ({event.resource.therapist})</div>
+      </div>
+    )
+  );
+}
+
+const customDayPropGetter = date => {
+  
+  if (moment(CURRENT_DATE).isSame(date, 'day'))
+    return {
+      className: 'current-day',
+      style: {
+        backgroundColor: '#b2dfdb'
+      },
+    }
+  else return {}
+}
 
 class ReactCalendarBase extends Component {
   constructor(...args) {
@@ -251,7 +337,19 @@ class ReactCalendarBase extends Component {
       existingEveryNumMonths: "",
       existingCheckedRepeat: false,
       existingNumOccurences: 0,
-      existingEndDateOccurrence: ""
+      existingEndDateOccurrence: "",
+      filters: {
+        therapist: "All",
+        client: "All",
+        category: "All"
+      },
+      filteredCalEvents: [],
+      isNewCategoryDialog: false,
+      newCategoryData: {
+        label: "",
+        value: "",
+        color: "#000000"
+      }
     };
   }
 
@@ -395,12 +493,13 @@ class ReactCalendarBase extends Component {
         }) || [];
       const therapistData = therapistsResp.data.data || [];
       const clientData = clientsResp.data.data || [];
-
+      const filteredCalEvents = calEvents.slice();
       this.setState(
         {
           calEvents,
           therapistData,
-          clientData
+          clientData,
+          filteredCalEvents
         },
         () => {
           // this.changeContentWithClientId()
@@ -739,6 +838,94 @@ class ReactCalendarBase extends Component {
   }
   */
 
+  handleTherapistFilterChange = event => {
+    const filters = {
+      therapist: event.target.value,
+      client: this.state.filters.client,
+      category: this.state.filters.category
+    }
+    this.handleFilterChanges(filters);
+  };
+
+  handleClientFilterChange = event => {
+    const filters = {
+      therapist: this.state.filters.therapist,
+      client: event.target.value,
+      category: this.state.filters.category
+    }
+    this.handleFilterChanges(filters);
+  };
+
+  handleCategoryFilterChange = event => {
+    const filters = {
+      therapist: this.state.filters.therapist,
+      client: this.state.filters.client,
+      category: event.target.value
+    }
+    this.handleFilterChanges(filters);
+  };
+
+  handleFilterChanges = (filters) => {
+    const {calEvents} = this.state;
+    
+    const filteredCalEvents = filters.therapist !== 'All' ? calEvents.filter(val => val.resource.therapist === filters.therapist) : calEvents;
+
+    const filteredCalEvents1 = filters.client !== 'All' ? filteredCalEvents.filter(val => val.resource.client === filters.client) : filteredCalEvents;
+
+    const filteredCalEvents2 = filters.category !== 'All' ? filteredCalEvents1.filter(val => val.resource.category === filters.category) : filteredCalEvents1;
+    this.setState({filters, filteredCalEvents: filteredCalEvents2});
+  }
+
+  handleNewCategoryDialogOpen = () => {
+    this.setState({isNewCategoryDialog: true});
+  }
+
+  handleNewCategorySave = () => {
+    const { newCategoryData } = this.state;
+
+    if (newCategoryData.value) {
+      categories.push(newCategoryData);
+      this.setState(
+        {
+          newCategoryData: {
+            label: "",
+            value: "",
+            color: "#000000"
+          },
+          isNewCategoryDialog: false
+        }
+      );
+    }
+  }
+
+  handleNewCategoryCancel = () => {
+    this.setState(
+      {
+        newCategoryData: {
+          label: "",
+          value: "",
+          color: "#000000"
+        },
+        isNewCategoryDialog: false
+      }
+    );
+  }
+
+  handleNewCategoryNameChanges = (e)  => {
+    const {newCategoryData} = this.state;
+    newCategoryData.value = e.target.value;
+    newCategoryData.label = e.target.value;
+
+    this.setState(newCategoryData);
+  }
+
+  handleNewCategoryColorChange = (color) => {
+    const {newCategoryData} = this.state;
+    newCategoryData.color = color.hex;
+
+    this.setState(newCategoryData);
+  } 
+
   render() {
     const { classes } = this.props;
     //const classes = withStyles();
@@ -747,7 +934,9 @@ class ReactCalendarBase extends Component {
       therapistData,
       clientData,
       selectedDate,
-      endSelectedDate
+      endSelectedDate,
+      filteredCalEvents,
+      filters
     } = this.state;
     /*
     if (this.state.redirect) {
@@ -758,22 +947,140 @@ class ReactCalendarBase extends Component {
     return (
       <div>
         <Container style={{ height: 1000 }} maxWidth="lg">
+          <TextField
+            id="therapistFilter"
+            select
+            label="Therapist"
+            className={classes.textField2}
+            value={filters.therapist}
+            onChange={this.handleTherapistFilterChange}
+            margin="normal"
+            variant="outlined"
+            SelectProps={{
+              MenuProps: {
+                className: classes.menu
+              }
+            }}
+          >
+            <MenuItem value="All" key="therapist-0">All</MenuItem>
+            {
+              therapistData.map((value, index) => {
+                return <MenuItem value={value.member_full_name} key={`therapist-${index+1}`}>{value.member_full_name}</MenuItem>
+              })
+            }
+          </TextField>
+          <TextField
+            id="clientFilter"
+            select
+            label="Client"
+            className={classes.textField2}
+            value={filters.client}
+            onChange={this.handleClientFilterChange}
+            margin="normal"
+            variant="outlined"
+            SelectProps={{
+              MenuProps: {
+                className: classes.menu
+              }
+            }}
+          >
+            <MenuItem value="All" key="client-0">All</MenuItem>
+            {
+              clientData.map((value, index) => {
+                return <MenuItem value={value.client_full_name} key={`client-${index+1}`}>{value.client_full_name}</MenuItem>
+              })
+            }
+          </TextField>
+          <TextField
+            id="categoryFilter"
+            select
+            label="Category"
+            className={classes.textField2}
+            value={filters.category}
+            onChange={this.handleCategoryFilterChange}
+            margin="normal"
+            variant="outlined"
+            SelectProps={{
+              MenuProps: {
+                className: classes.menu
+              }
+            }}
+          >
+            <MenuItem value="All" key="category-0">All</MenuItem>
+            {
+              categories.map((value, index) => {
+                return <MenuItem value={value.value} key={`category-${index+1}`}>{value.value}</MenuItem>
+              })
+            }
+          </TextField>
+
+          <Button
+            className={classes.categoryButton}
+            size="large"
+            variant="contained"
+            onClick={() => this.handleNewCategoryDialogOpen()}
+          >
+            New Category
+          </Button>
+
+          <Dialog
+            open={this.state.isNewCategoryDialog}
+            onClose={this.handleNewCategoryCancel}
+          >
+            <DialogTitle>New Category</DialogTitle>
+            <DialogContent>
+              <TextField
+                required
+                id="new_category_value"
+                label="Category Name"
+                className={classes.textField}
+                value={this.state.newCategoryData.value}
+                onChange={e => this.handleNewCategoryNameChanges(e)}
+                margin="normal"
+                variant="outlined"
+              />
+              <SketchPicker
+                className={classes.colorPicker}
+                width="380px"
+                color={ this.state.newCategoryData.color }
+                onChange={this.handleNewCategoryColorChange}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.handleNewCategorySave()}>save</Button>
+              <Button onClick={() => this.handleNewCategoryCancel()} autoFocus>
+                cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <Calendar
             className={classes.root}
             selectable={true}
             startAccessor={calEvents => new Date(calEvents.start)}
             endAccessor={calEvents => new Date(calEvents.end)}
             localizer={localizer}
-            events={calEvents}
+            events={filteredCalEvents}
             views={["month", "week", "day"]}
             defaultDate={new Date()}
             defaultView="month"
             onSelectEvent={this.handleClickOpen2}
             onSelectSlot={this.handleClickOpen}
+            dayPropGetter={customDayPropGetter}
             // (this sets the start time of 8am)
             min={new Date(2000, 1, 1, 8)}
             // this sets the end time of 8pm)
             max={new Date(2000, 1, 1, 20)}
+            popup={true}
+            components={{
+              // custom wrapper here
+              // so that it actually gets used
+              eventWrapper: DefaultEventWrapper,
+              toolbar: CustomToolbar
+            }}
+            // slotPropGetter={(date) => {
+            //   console.log(date)
+            // }}
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
