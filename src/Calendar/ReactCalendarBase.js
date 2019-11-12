@@ -1,4 +1,4 @@
-import React, { Component, Children } from "react";
+import React, { Component } from "react";
 import { withRouter } from "react-router";
 
 //import BigCalendar from "react-big-calendar";
@@ -42,8 +42,7 @@ import Snackbar from "@material-ui/core/Snackbar";
 import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
 
 import API from "../utils/API";
-
-import { SketchPicker } from 'react-color';
+import { SketchPicker } from "react-color";
 
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
@@ -79,6 +78,7 @@ const styles = theme => ({
   root3: {
     width: "100%"
   },
+
   categoryButton: {
     marginTop: theme.spacing(2),
     marginRight: theme.spacing(2),
@@ -88,6 +88,9 @@ const styles = theme => ({
       backgroundColor: "#80cbc4"
     }
   },
+
+  /* NEW */
+
   colorPicker: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
@@ -190,79 +193,137 @@ const customFreqOptions = [
   */
 ];
 
-const categories = [
-];
+const categories = [];
 
-const eventEdgeColor = (attendance) => {
+const eventEdgeColor = attendance => {
   let edgeColor;
-  if (attendance === 'Present ($)') {
-    edgeColor = 'green';
-  } else if (attendance === 'Absent, no notice ($)') {
-    edgeColor = 'red';
-  } else if (attendance === 'Absent, notice') {
-    edgeColor = 'yellow';
+  if (attendance === "Present ($)") {
+    edgeColor = "green";
+  } else if (attendance === "Absent, no notice ($)") {
+    edgeColor = "red";
+  } else if (attendance === "Absent, notice") {
+    edgeColor = "yellow";
   }
-  
-  return attendance ? {
-    border: "none",
-    backgroundColor: "#80cbc4",
-    borderLeft: "5px solid " + edgeColor
-  } : {
-    border: "none",
-    backgroundColor: "#80cbc4"
-  }
-}
 
-const CustomToolbar = ({label, onNavigate, view, onView}) => {
+  return attendance
+    ? {
+        border: "none",
+        //backgroundColor: "#80cbc4",
+        borderLeft: "5px solid " + edgeColor
+      }
+    : {
+        border: "none"
+        //backgroundColor: "#80cbc4"
+      };
+};
+
+const CustomToolbar = ({ label, onNavigate, view, onView }) => {
   return (
     <div className="rbc-toolbar">
       <span className="rbc-btn-group">
-        <button type="button" onClick={() => onNavigate('PREV')}>Back</button>
-        <button type="button" onClick={() => onNavigate('TODAY')}>Today</button>
-        <button type="button" onClick={() => onNavigate('NEXT')}>Next</button>
+        <button type="button" onClick={() => onNavigate("PREV")}>
+          Back
+        </button>
+        <button type="button" onClick={() => onNavigate("TODAY")}>
+          Today
+        </button>
+        <button type="button" onClick={() => onNavigate("NEXT")}>
+          Next
+        </button>
       </span>
-      <span className="rbc-toolbar-label" style={{fontSize: "18px"}}>{label}</span>
+      <span className="rbc-toolbar-label" style={{ fontSize: "18px" }}>
+        {label}
+      </span>
       <span className="rbc-btn-group">
-        <button type="button" className={view === "month" ? "rbc-active" : ""} onClick={() => onView('month')}>Month</button>
-        <button type="button" className={view === "week" ? "rbc-active" : ""} onClick={() => onView('week')}>Week</button>
-        <button type="button" className={view === "day" ? "rbc-active" : ""} onClick={() => onView('day')}>Day</button>
+        <button
+          type="button"
+          className={view === "month" ? "rbc-active" : ""}
+          onClick={() => onView("month")}
+        >
+          Month
+        </button>
+        <button
+          type="button"
+          className={view === "week" ? "rbc-active" : ""}
+          onClick={() => onView("week")}
+        >
+          Week
+        </button>
+        <button
+          type="button"
+          className={view === "day" ? "rbc-active" : ""}
+          onClick={() => onView("day")}
+        >
+          Day
+        </button>
       </span>
     </div>
   );
-}
+};
 
-const DefaultEventWrapper = ({event, onSelect, onClick, selected, label, type, children}) => {
-  return (
-    type === "date" ? (
-      children.props.type === "popup" ? (
-        <div type="popup" tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
-          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")}; {event.resource.client} ({event.resource.therapist})</div>
+const DefaultEventWrapper = ({
+  event,
+  onSelect,
+  onClick,
+  selected,
+  label,
+  type,
+  children
+}) => {
+  return type === "date" ? (
+    children.props.type === "popup" ? (
+      <div
+        type="popup"
+        tabIndex="0"
+        className="rbc-event"
+        style={eventEdgeColor(event.resource.attendance)}
+        onClick={() => onSelect(event)}
+      >
+        <div className="rbc-event-content" title={event.title}>
+          {localizer.format(event.start, "h:mm a")} -{" "}
+          {localizer.format(event.end, "h:mm a")}; {event.resource.client} (
+          {event.resource.therapist})
         </div>
-      ) : (
-        <div tabIndex="0" className="rbc-event" style={eventEdgeColor(event.resource.attendance)} onClick={() => onSelect(event)}>
-          <div className="rbc-event-content" title={event.title}>{localizer.format(event.start, "h:mm a")} - {localizer.format(event.end, "h:mm a")}; {event.resource.client} ({event.resource.therapist})</div>
-        </div>
-      )
+      </div>
     ) : (
-      <div title={event.title} className={selected ? "rbc-event rbc-selected" : "rbc-event"} style={eventEdgeColor(event.resource.attendance)} onClick={() => onClick()}>
-        <div className="rbc-event-label">{label}</div>
-        <div className="rbc-event-content">{event.resource.client} ({event.resource.therapist})</div>
+      <div
+        tabIndex="0"
+        className="rbc-event"
+        style={eventEdgeColor(event.resource.attendance)}
+        onClick={() => onSelect(event)}
+      >
+        <div className="rbc-event-content" title={event.title}>
+          {localizer.format(event.start, "h:mm a")} -{" "}
+          {localizer.format(event.end, "h:mm a")}; {event.resource.client} (
+          {event.resource.therapist})
+        </div>
       </div>
     )
+  ) : (
+    <div
+      title={event.title}
+      className={selected ? "rbc-event rbc-selected" : "rbc-event"}
+      style={eventEdgeColor(event.resource.attendance)}
+      onClick={() => onClick()}
+    >
+      <div className="rbc-event-label">{label}</div>
+      <div className="rbc-event-content">
+        {event.resource.client} ({event.resource.therapist})
+      </div>
+    </div>
   );
-}
+};
 
 const customDayPropGetter = date => {
-  
-  if (moment(CURRENT_DATE).isSame(date, 'day'))
+  if (moment(CURRENT_DATE).isSame(date, "day"))
     return {
-      className: 'current-day',
+      className: "current-day",
       style: {
-        backgroundColor: '#b2dfdb'
-      },
-    }
-  else return {}
-}
+        backgroundColor: "#e0f2f1"
+      }
+    };
+  else return {};
+};
 
 class ReactCalendarBase extends Component {
   constructor(...args) {
@@ -338,6 +399,8 @@ class ReactCalendarBase extends Component {
       existingCheckedRepeat: false,
       existingNumOccurences: 0,
       existingEndDateOccurrence: "",
+      amount: 0,
+      transType: "Calendar",
       filters: {
         therapist: "All",
         client: "All",
@@ -376,6 +439,7 @@ class ReactCalendarBase extends Component {
       newLocation: this.state.newLocation,
       newCategory: this.state.newCategory,
       newClient: this.state.newClient,
+      newDescription: "Session with " + this.state.newTherapist,
       selectedDate: this.state.selectedDate,
       endSelectedDate: this.state.endSelectedDate,
       checkedRepeat: +this.state.checkedRepeat, //true,false
@@ -396,7 +460,10 @@ class ReactCalendarBase extends Component {
       wed: +this.state.wed,
       thu: +this.state.thu,
       fri: +this.state.fri,
-      sat: +this.state.sat
+      sat: +this.state.sat,
+      amount: this.state.amount,
+      transType: this.state.transType,
+      newDescription: "Session with " + this.state.newTherapist
     };
     console.log("submitobj", obj);
 
@@ -843,7 +910,7 @@ class ReactCalendarBase extends Component {
       therapist: event.target.value,
       client: this.state.filters.client,
       category: this.state.filters.category
-    }
+    };
     this.handleFilterChanges(filters);
   };
 
@@ -852,7 +919,7 @@ class ReactCalendarBase extends Component {
       therapist: this.state.filters.therapist,
       client: event.target.value,
       category: this.state.filters.category
-    }
+    };
     this.handleFilterChanges(filters);
   };
 
@@ -861,70 +928,79 @@ class ReactCalendarBase extends Component {
       therapist: this.state.filters.therapist,
       client: this.state.filters.client,
       category: event.target.value
-    }
+    };
     this.handleFilterChanges(filters);
   };
 
-  handleFilterChanges = (filters) => {
-    const {calEvents} = this.state;
-    
-    const filteredCalEvents = filters.therapist !== 'All' ? calEvents.filter(val => val.resource.therapist === filters.therapist) : calEvents;
+  handleFilterChanges = filters => {
+    const { calEvents } = this.state;
 
-    const filteredCalEvents1 = filters.client !== 'All' ? filteredCalEvents.filter(val => val.resource.client === filters.client) : filteredCalEvents;
+    const filteredCalEvents =
+      filters.therapist !== "All"
+        ? calEvents.filter(val => val.resource.therapist === filters.therapist)
+        : calEvents;
 
-    const filteredCalEvents2 = filters.category !== 'All' ? filteredCalEvents1.filter(val => val.resource.category === filters.category) : filteredCalEvents1;
-    this.setState({filters, filteredCalEvents: filteredCalEvents2});
-  }
+    const filteredCalEvents1 =
+      filters.client !== "All"
+        ? filteredCalEvents.filter(
+            val => val.resource.client === filters.client
+          )
+        : filteredCalEvents;
+
+    const filteredCalEvents2 =
+      filters.category !== "All"
+        ? filteredCalEvents1.filter(
+            val => val.resource.category === filters.category
+          )
+        : filteredCalEvents1;
+    this.setState({ filters, filteredCalEvents: filteredCalEvents2 });
+  };
 
   handleNewCategoryDialogOpen = () => {
-    this.setState({isNewCategoryDialog: true});
-  }
+    this.setState({ isNewCategoryDialog: true });
+  };
 
-  handleNewCategorySave = () => {
+  /*   handleNewCategorySave = () => {
     const { newCategoryData } = this.state;
 
     if (newCategoryData.value) {
       categories.push(newCategoryData);
-      this.setState(
-        {
-          newCategoryData: {
-            label: "",
-            value: "",
-            color: "#000000"
-          },
-          isNewCategoryDialog: false
-        }
-      );
-    }
-  }
-
-  handleNewCategoryCancel = () => {
-    this.setState(
-      {
+      this.setState({
         newCategoryData: {
           label: "",
           value: "",
           color: "#000000"
         },
         isNewCategoryDialog: false
-      }
-    );
-  }
+      });
+    }
+  }; */
 
-  handleNewCategoryNameChanges = (e)  => {
-    const {newCategoryData} = this.state;
+  handleNewCategoryCancel = () => {
+    this.setState({
+      newCategoryData: {
+        label: "",
+        value: "",
+        color: "#000000"
+      },
+      isNewCategoryDialog: false
+    });
+  };
+
+  handleNewCategoryNameChanges = e => {
+    const { newCategoryData } = this.state;
     newCategoryData.value = e.target.value;
     newCategoryData.label = e.target.value;
 
     this.setState(newCategoryData);
-  }
+  };
 
-  handleNewCategoryColorChange = (color) => {
-    const {newCategoryData} = this.state;
+  handleNewCategoryColorChange = color => {
+    const { newCategoryData } = this.state;
     newCategoryData.color = color.hex;
 
     this.setState(newCategoryData);
-  } 
+  };
 
   render() {
     const { classes } = this.props;
@@ -947,6 +1023,7 @@ class ReactCalendarBase extends Component {
     return (
       <div>
         <Container style={{ height: 1000 }} maxWidth="lg">
+          <Grid container justify="center"></Grid>
           <TextField
             id="therapistFilter"
             select
@@ -962,12 +1039,19 @@ class ReactCalendarBase extends Component {
               }
             }}
           >
-            <MenuItem value="All" key="therapist-0">All</MenuItem>
-            {
-              therapistData.map((value, index) => {
-                return <MenuItem value={value.member_full_name} key={`therapist-${index+1}`}>{value.member_full_name}</MenuItem>
-              })
-            }
+            <MenuItem value="All" key="therapist-0">
+              All
+            </MenuItem>
+            {therapistData.map((value, index) => {
+              return (
+                <MenuItem
+                  value={value.member_full_name}
+                  key={`therapist-${index + 1}`}
+                >
+                  {value.member_full_name}
+                </MenuItem>
+              );
+            })}
           </TextField>
           <TextField
             id="clientFilter"
@@ -984,12 +1068,19 @@ class ReactCalendarBase extends Component {
               }
             }}
           >
-            <MenuItem value="All" key="client-0">All</MenuItem>
-            {
-              clientData.map((value, index) => {
-                return <MenuItem value={value.client_full_name} key={`client-${index+1}`}>{value.client_full_name}</MenuItem>
-              })
-            }
+            <MenuItem value="All" key="client-0">
+              All
+            </MenuItem>
+            {clientData.map((value, index) => {
+              return (
+                <MenuItem
+                  value={value.client_full_name}
+                  key={`client-${index + 1}`}
+                >
+                  {value.client_full_name}
+                </MenuItem>
+              );
+            })}
           </TextField>
           <TextField
             id="categoryFilter"
@@ -1006,12 +1097,16 @@ class ReactCalendarBase extends Component {
               }
             }}
           >
-            <MenuItem value="All" key="category-0">All</MenuItem>
-            {
-              categories.map((value, index) => {
-                return <MenuItem value={value.value} key={`category-${index+1}`}>{value.value}</MenuItem>
-              })
-            }
+            <MenuItem value="All" key="category-0">
+              All
+            </MenuItem>
+            {categories.map((value, index) => {
+              return (
+                <MenuItem value={value.value} key={`category-${index + 1}`}>
+                  {value.value}
+                </MenuItem>
+              );
+            })}
           </TextField>
 
           <Button
@@ -1042,18 +1137,17 @@ class ReactCalendarBase extends Component {
               <SketchPicker
                 className={classes.colorPicker}
                 width="380px"
-                color={ this.state.newCategoryData.color }
+                color={this.state.newCategoryData.color}
                 onChange={this.handleNewCategoryColorChange}
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => this.handleNewCategorySave()}>save</Button>
+              {/*    <Button onClick={() => this.handleNewCategorySave()}>save</Button> */}
               <Button onClick={() => this.handleNewCategoryCancel()} autoFocus>
                 cancel
               </Button>
             </DialogActions>
           </Dialog>
-
           <Calendar
             className={classes.root}
             selectable={true}
@@ -1068,9 +1162,9 @@ class ReactCalendarBase extends Component {
             onSelectSlot={this.handleClickOpen}
             dayPropGetter={customDayPropGetter}
             // (this sets the start time of 8am)
-            min={new Date(2000, 1, 1, 8)}
+            // min={new Date(2000, 1, 1, 8)}
             // this sets the end time of 8pm)
-            max={new Date(2000, 1, 1, 20)}
+            // max={new Date(2000, 1, 1, 20)}
             popup={true}
             components={{
               // custom wrapper here
@@ -1078,9 +1172,6 @@ class ReactCalendarBase extends Component {
               eventWrapper: DefaultEventWrapper,
               toolbar: CustomToolbar
             }}
-            // slotPropGetter={(date) => {
-            //   console.log(date)
-            // }}
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
@@ -1994,19 +2085,7 @@ class ReactCalendarBase extends Component {
 
                   <Button
                     onClick={() => {
-                      this.onSubmit(
-                        //this.state.title,
-                        this.state.newBillType,
-                        //this.state.newClientType,
-                        this.state.newClient,
-                        this.state.thereapist,
-                        this.state.newLocation,
-                        this.state.newCategory,
-                        this.state.selectedDate,
-                        this.state.endSelectedDate
-                        /* any other notable recurring ones will eventually be submitted */
-                      );
-                      //this.reloadPage();
+                      this.onSubmit();
                     }}
                     color="primary"
                   >
