@@ -1,3 +1,8 @@
 .rbc-current-time-indicator {
-    background-color: orange;
+  background-color: orange;
+  height: 2px;
+}
+
+.rbc-event {
+  background-color: #80cbc4;
 }
