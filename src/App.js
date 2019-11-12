@@ -26,7 +26,11 @@ import HomeIcon from "@material-ui/icons/Home";
 import InsertInvitation from "@material-ui/icons/InsertInvitation";
 import TitleBarHome from "./titleBars/titleBarHome";
 import TitleBarCal from "./titleBars/titleBarCalendar";
+import TitleBarAccountsInv from "./titleBars/titleBarAccountsInv";
+import TitleBarAccountDetails from "./titleBars/titleBarAccountDetails";
 import TitleBarDocumentation from "./titleBars/titleBarDocumentation";
+import AccountsInvoicesTabs from "./AcountsInvoices/accountsInvoicesTabs";
+import AccountDetailsTable from "./Tables/accountDetailsTable";
 import ReactCalendarBase from "./Calendar/ReactCalendarBase";
 import Documentation from "./Calendar/documentation";
 import Blue from "@material-ui/core/colors/blue";
@@ -252,6 +256,14 @@ class MainApp extends React.Component {
                 <ListItemText primary="Calendar" />
               </ListItem>
             </Link>
+            <Link style={navStyle} to="/accountsandinv">
+              <ListItem button>
+                <ListItemIcon>
+                  <AccountBalanceWallet />
+                </ListItemIcon>
+                <ListItemText primary="Acounts & Invoices" />
+              </ListItem>
+            </Link>
           </List>
         </Drawer>
 
@@ -291,6 +303,28 @@ class MainApp extends React.Component {
                 <div>
                   <TitleBarDocumentation />
                   <Documentation />
+                </div>
+              )}
+            />
+
+            <Route
+              exact
+              path="/accountsandinv"
+              render={() => (
+                <div>
+                  <TitleBarAccountsInv />
+                  <AccountsInvoicesTabs />
+                </div>
+              )}
+            />
+
+            <Route
+              exact
+              path="/accountsandinv/accountdetails"
+              render={() => (
+                <div>
+                  <TitleBarAccountDetails />
+                  <AccountDetailsTable />
                 </div>
               )}
             />

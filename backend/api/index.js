@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const memberRoutes = require("./server/routes/MemberRoutes");
 const clientRoutes = require("./server/routes/ClientRoutes");
 const eventRoutes = require("./server/routes/EventRoutes");
-//const accountInvRoutes = require("./server/routes/AccountInvRoutes");
+const accountInvRoutes = require("./server/routes/AccountInvRoutes");
 //const formRoutes = require("./server/routes/FormRoutes");
 //const templateRoutes = require("./server/routes/TemplateRoutes");
 
@@ -41,7 +41,7 @@ const port = process.env.PORT || 5000;
 app.use("/members", memberRoutes);
 app.use("/clients", clientRoutes);
 app.use("/events", eventRoutes);
-//app.use("/accounts", accountInvRoutes);
+app.use("/accounts", accountInvRoutes);
 //app.use("/forms", formRoutes);
 //app.use("/templates", templateRoutes);
 
