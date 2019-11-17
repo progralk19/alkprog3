@@ -43,6 +43,8 @@ class EventService {
     var selected_days = [sun, mon, tues, wed, thu, fri, sat];
     var start_dates = [];
     var end_dates = [];
+    const newClients = formdata.newClients;
+    const newTherapists = formdata.newTherapists;
 
     //------------------occurances-----------------------------
     var newNumOccurences = formdata.newNumOccurences; //"4"
@@ -175,7 +177,7 @@ class EventService {
 
     try {
       let insertFirstSql =
-        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, custom_frequency, repeat_option, end_repeat, end_date_occurrence, num_occurences, repeat_num_days, sun, mon, tues, wed, thu, fri, sat, billing_email, session_cost, session_set_length) VALUES" +
+        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, custom_frequency, repeat_option, end_repeat, end_date_occurrence, num_occurences, repeat_num_days, sun, mon, tues, wed, thu, fri, sat, billing_email, session_cost, session_set_length, clients, therapists) VALUES" +
         " ('" +
         newClient +
         "','" +
@@ -226,10 +228,13 @@ class EventService {
         sessionCost +
         "," +
         sessionLength +
+        ",'" +
+        newClients +
+        "','" +
+        newTherapists +
+        "'"+
         ")";
-
       const firstQueryResult = await query(insertFirstSql);
-
       let updateSQL = "UPDATE testevent SET series_start_id=? WHERE id=?";
       query(updateSQL, [firstQueryResult.insertId, firstQueryResult.insertId]);
       if (start_dates.length == 1)
@@ -237,7 +242,7 @@ class EventService {
         return firstQueryResult;
 
       var sql =
-        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, repeat_option, end_repeat, num_occurences,  series_start_id, billing_email, session_cost, session_set_length) VALUES";
+        "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, repeat_option, end_repeat, num_occurences,  series_start_id, billing_email, session_cost, session_set_length, clients, therapists) VALUES";
 
       for (let i = 1; i < start_dates.length; i++) {
         sql +=
@@ -273,7 +278,11 @@ class EventService {
           sessionCost +
           ", " +
           sessionLength +
-          ")";
+          ",'" +
+          newClients
+          "','" +
+          newTherapists
+          "')";
         if (i < start_dates.length - 1) sql += ",";
       }
 

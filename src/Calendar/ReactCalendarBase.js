@@ -44,6 +44,12 @@ import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
 import API from "../utils/API";
 import { SketchPicker } from "react-color";
 
+import Select from "@material-ui/core/Select";
+import FormControl from "@material-ui/core/FormControl";
+import InputLabel from "@material-ui/core/InputLabel";
+import Chip from "@material-ui/core/Chip";
+import { isNull } from "util";
+
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
 moment().toDate();
@@ -68,6 +74,19 @@ const styles = theme => ({
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
     width: 194
+  },
+  formControlNew: {
+    margin: theme.spacing(1),
+    width: 400
+  },
+  formControlFilter: {
+    margin: theme.spacing(1),
+    minWidth: 194,
+    maxWidth: 300
+  },
+  chips: {
+    display: "flex",
+    flexWrap: "wrap"
   },
   dense: {
     marginTop: 16
@@ -270,6 +289,12 @@ const DefaultEventWrapper = ({
   type,
   children
 }) => {
+  let clientInfo = event.resource.client;
+  let therapistInfo = event.resource.therapist;
+  if (clientInfo.length == 0) {
+    clientInfo = event.resource.clients;
+    therapistInfo = event.resource.therapists;
+  }
   return type === "date" ? (
     children.props.type === "popup" ? (
       <div
@@ -280,9 +305,10 @@ const DefaultEventWrapper = ({
         onClick={() => onSelect(event)}
       >
         <div className="rbc-event-content" title={event.title}>
-          {localizer.format(event.start, "h:mm a")} -{" "}
-          {localizer.format(event.end, "h:mm a")}; {event.resource.client} (
-          {event.resource.therapist})
+          {/* {localizer.format(event.start, "h:mm")} -{" "} commented by sasa*/}
+          {localizer.format(event.start, "h:mm")}-
+          {localizer.format(event.end, "h:mm a")}; {clientInfo} (
+          {therapistInfo})
         </div>
       </div>
     ) : (
@@ -293,9 +319,9 @@ const DefaultEventWrapper = ({
         onClick={() => onSelect(event)}
       >
         <div className="rbc-event-content" title={event.title}>
-          {localizer.format(event.start, "h:mm a")} -{" "}
-          {localizer.format(event.end, "h:mm a")}; {event.resource.client} (
-          {event.resource.therapist})
+          {localizer.format(event.start, "h:mm")}-
+          {localizer.format(event.end, "h:mm a")}; {clientInfo} (
+          {therapistInfo})
         </div>
       </div>
     )
@@ -308,7 +334,7 @@ const DefaultEventWrapper = ({
     >
       <div className="rbc-event-label">{label}</div>
       <div className="rbc-event-content">
-        {event.resource.client} ({event.resource.therapist})
+        {event.resource.client} ({therapistInfo})
       </div>
     </div>
   );
@@ -351,6 +377,10 @@ class ReactCalendarBase extends Component {
       //newClientType: "",
       newClient: "",
       newTherapist: "",
+      /*Added by Sasa*/
+      newClients: [],
+      newTherapists: [],
+      /**/
       newLocation: "",
       newCategory: "",
       newStartDate: "",
@@ -399,12 +429,18 @@ class ReactCalendarBase extends Component {
       existingCheckedRepeat: false,
       existingNumOccurences: 0,
       existingEndDateOccurrence: "",
+      existingClients: [],
+      existingTherapists: [],
       amount: 0,
       transType: "Calendar",
       filters: {
         therapist: "All",
         client: "All",
         category: "All"
+      },
+      multiFilters: {
+        therapists: [],
+        clients: []
       },
       filteredCalEvents: [],
       isNewCategoryDialog: false,
@@ -463,7 +499,9 @@ class ReactCalendarBase extends Component {
       sat: +this.state.sat,
       amount: this.state.amount,
       transType: this.state.transType,
-      newDescription: "Session with " + this.state.newTherapist
+      newDescription: "Session with " + this.state.newTherapist,      
+      newClients: this.state.newClients,
+      newTherapists: this.state.newTherapists,
     };
     console.log("submitobj", obj);
 
@@ -719,8 +757,17 @@ class ReactCalendarBase extends Component {
       billing_email,
       session_cost,
       session_length,
-      category
+      category,
+      clients,
+      therapists
     } = firstEvent.resource;
+
+    let clientList = '';
+    let therapistList = '';
+    if (!isNull(clients) && clients.length !== 0)
+      clientList = clients.split(',');
+    if (!isNull(therapists) && therapists.length !== 0)
+      therapistList = therapists.split(',');
 
     if (Boolean(repeats)) this.setState({ isSoleDialog: true });
     else this.setState({ openExisting: true });
@@ -753,7 +800,9 @@ class ReactCalendarBase extends Component {
       sat: Boolean(sat),
       billingEmail: billing_email || "",
       sessionCost: session_cost || 0.0,
-      sessionLength: session_length || 0
+      sessionLength: session_length || 0,
+      existingClients: clientList,
+      existingTherapists: therapistList,
     });
   };
 
@@ -765,6 +814,22 @@ class ReactCalendarBase extends Component {
   handleChange = name => event => {
     if (name === "newClient" || name === "existingClient")
       this.updateClientInfo(event.target.value);
+    this.setState({
+      [name]: event.target.value,
+      newCustomFreq: "",
+      sun: false,
+      mon: false,
+      tues: false,
+      wed: false,
+      thu: false,
+      fri: false,
+      sat: false
+    });
+  };
+
+  handleMultiSelectorChange = name => event => {
+    // if (name === "newClient" || name === "existingClient")
+    //   this.updateClientInfo(event.target.value);
     this.setState({
       [name]: event.target.value,
       newCustomFreq: "",
@@ -956,6 +1021,68 @@ class ReactCalendarBase extends Component {
     this.setState({ filters, filteredCalEvents: filteredCalEvents2 });
   };
 
+  handleClientMultiFilterChange = event => {
+    const multiFilters = {
+      therapists: this.state.multiFilters.therapists,
+      clients: this.state.multiFilters.clients
+    };    
+    multiFilters.clients = event.target.value;
+    if (event.target.value.includes("All")) {
+      multiFilters.clients = ["All"];
+    }
+    this.handleMultiFitlerChanges(multiFilters);
+  };
+
+  handleTherapistMultiFilterChange = event => {    
+    const multiFilters = {
+      therapists: this.state.multiFilters.therapists,
+      clients: this.state.multiFilters.clients
+    };
+    multiFilters.therapists = event.target.value;
+    if (event.target.value.includes("All")) {
+      multiFilters.therapists = ["All"];
+    }
+    this.handleMultiFitlerChanges(multiFilters);
+  };
+
+  checkClient = (resource, keyword) => {
+    if (resource.client === keyword) {
+      return true;
+    } else if (!isNull(resource.clients) && resource.clients.includes(keyword)) {
+      return true;
+    }
+    return false;
+  };
+
+  checkTherapist = (resource, keyword) => {
+    if (resource.therapist === keyword) {
+      return true;
+    } else if (!isNull(resource.therapists) && resource.therapists.includes(keyword)) {
+      return true;
+    }
+    return false;
+  };
+
+  handleMultiFitlerChanges = (multiFilters) => {
+    let { 
+      calEvents
+    } = this.state;
+    if (multiFilters.clients.length > 0 && multiFilters.clients[0] !== "All") {
+      for (let i = 0, len = multiFilters.clients.length; i < len; i ++) {
+        calEvents = calEvents.filter(val => this.checkClient(val.resource, multiFilters.clients[i]));
+      }
+    }
+    if (multiFilters.therapists.length > 0 && multiFilters.therapists[0] !== "All") {
+      for (let i = 0, len = multiFilters.therapists.length; i < len; i ++) {
+        calEvents = calEvents.filter(val => this.checkTherapist(val.resource, multiFilters.therapists[i]));
+      }
+    }
+    this.setState({ 
+      multiFilters: multiFilters, 
+      filteredCalEvents: calEvents
+    });
+  };
+
   handleNewCategoryDialogOpen = () => {
     this.setState({ isNewCategoryDialog: true });
   };
@@ -1012,19 +1139,19 @@ class ReactCalendarBase extends Component {
       selectedDate,
       endSelectedDate,
       filteredCalEvents,
-      filters
+      filters,
+      multiFilters
     } = this.state;
     /*
     if (this.state.redirect) {
       return <Redirect to="/calendar/a" />;
     }
     */
-
     return (
       <div>
         <Container style={{ height: 1000 }} maxWidth="lg">
           <Grid container justify="center"></Grid>
-          <TextField
+          {/* <TextField
             id="therapistFilter"
             select
             label="Therapist"
@@ -1052,8 +1179,8 @@ class ReactCalendarBase extends Component {
                 </MenuItem>
               );
             })}
-          </TextField>
-          <TextField
+          </TextField> */}          
+          {/* <TextField
             id="clientFilter"
             select
             label="Client"
@@ -1081,7 +1208,70 @@ class ReactCalendarBase extends Component {
                 </MenuItem>
               );
             })}
-          </TextField>
+          </TextField> */}
+          <FormControl className={classes.formControlFilter}>
+            <InputLabel id="clientMultiFilterLabel">Client</InputLabel>
+            <Select
+              id="clientMultiFilter"
+              multiple
+              value={multiFilters.clients}
+              onChange={this.handleClientMultiFilterChange}
+              renderValue={selected => (
+                <div className={classes.chips}>
+                  {selected.map(value => (
+                    <Chip key={value} label={value}/>
+                  ))}
+                </div>
+              )}
+            >
+              <MenuItem
+                key={`client-all`}
+                value={`All`}
+              >
+                {`All`}
+              </MenuItem>
+              {clientData.map((value, index) => (
+                <MenuItem
+                  key={`client-${index + 1}`}
+                  value={value.client_full_name}
+                >
+                  {value.client_full_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl className={classes.formControlFilter}>
+            <InputLabel id="therapistMultiLabel">Therapist</InputLabel>
+            <Select
+              id="therapistMultiFilter"
+              multiple
+              value={multiFilters.therapists}
+              onChange={this.handleTherapistMultiFilterChange}
+              renderValue={selected => (
+                <div className={classes.chips}>
+                  {selected.map(value => (
+                    <Chip key={value} label={value}/>
+                  ))}
+                </div>
+              )}
+            >
+              <MenuItem
+                key={`therapist-all`}
+                value={`All`}
+              >
+                {`All`}
+              </MenuItem>
+              {therapistData.map((value, index) => (
+                <MenuItem
+                  key={`therapist-${index + 1}`}
+                  value={value.member_full_name}
+                >
+                  {value.member_full_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
           <TextField
             id="categoryFilter"
             select
@@ -1231,7 +1421,8 @@ class ReactCalendarBase extends Component {
                   </MenuItem>
                 ))}
               </TextField>
-
+              {
+              this.state.existingClient.length !== 0 ?
               <TextField
                 required
                 id="existingClient"
@@ -1254,6 +1445,10 @@ class ReactCalendarBase extends Component {
                   </MenuItem>
                 ))}
               </TextField>
+              : ''
+              }
+              {
+              this.state.existingTherapist.length !== 0 ?
               <TextField
                 id="existingTherapist"
                 select
@@ -1275,6 +1470,67 @@ class ReactCalendarBase extends Component {
                   </MenuItem>
                 ))}
               </TextField>
+              : ''
+              }
+              {
+              this.state.existingClients.length !== 0 ? 
+              <FormControl className={classes.formControlNew}>
+                <InputLabel id="existing-select-clients-label">Client</InputLabel>
+                <Select
+                  id="existing-select-clients"
+                  multiple
+                  value={this.state.existingClients}
+                  onChange={this.handleMultiSelectorChange("")}
+                  renderValue={selected => (
+                    <div className={classes.chips}>
+                      {selected.map(value => (
+                        <Chip key={value} label={value}/>
+                      ))}
+                    </div>
+                  )}
+                >
+                  {clientData.map((value, index) => (
+                    <MenuItem
+                      key={`client-${index + 1}`}
+                      value={value.client_full_name}
+                    >
+                      {value.client_full_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              : ''
+              }          
+              {
+              this.state.existingTherapists.length !== 0 ? 
+              <FormControl className={classes.formControlNew}>
+                <InputLabel id="existing-select-therapists-label">Therapist</InputLabel>
+                <Select
+                  id="existing-select-therapists"
+                  multiple
+                  value={this.state.existingTherapists}
+                  onChange={this.handleMultiSelectorChange("")}
+                  renderValue={selected => (
+                    <div className={classes.chips}>
+                      {selected.map(value => (
+                        <Chip key={value} label={value}/>
+                      ))}
+                    </div>
+                  )}
+                >
+                  {therapistData.map((value, index) => (
+                    <MenuItem
+                      key={`therapist-${index + 1}`}
+                      value={value.member_full_name}
+                    >
+                      {value.member_full_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              : ''
+              }
+                  
               <MuiThemeProvider theme={theme}>
                 <TextField
                   required
@@ -1714,8 +1970,7 @@ class ReactCalendarBase extends Component {
                   </MenuItem>
                 ))}
               </TextField>
-
-              <TextField
+              {/* <TextField
                 required
                 id="newClient"
                 select
@@ -1757,7 +2012,57 @@ class ReactCalendarBase extends Component {
                     {option.member_full_name}
                   </MenuItem>
                 ))}
-              </TextField>
+              </TextField> */}
+              <FormControl className={classes.formControlNew}>
+                <InputLabel id="standard-select-clients-label">Client</InputLabel>
+                <Select
+                  id="standard-select-clients"
+                  multiple
+                  value={this.state.newClients}
+                  onChange={this.handleMultiSelectorChange("newClients")}
+                  renderValue={selected => (
+                    <div className={classes.chips}>
+                      {selected.map(value => (
+                        <Chip key={value} label={value}/>
+                      ))}
+                    </div>
+                  )}
+                >
+                  {clientData.map((value, index) => (
+                    <MenuItem
+                      key={`client-${index + 1}`}
+                      value={value.client_full_name}
+                    >
+                      {value.client_full_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl className={classes.formControlNew}>
+                <InputLabel id="standard-select-therapists-label">Therapist</InputLabel>
+                <Select
+                  id="standard-select-therapists"
+                  multiple
+                  value={this.state.newTherapists}
+                  onChange={this.handleMultiSelectorChange("newTherapists")}
+                  renderValue={selected => (
+                    <div className={classes.chips}>
+                      {selected.map(value => (
+                        <Chip key={value} label={value}/>
+                      ))}
+                    </div>
+                  )}
+                >
+                  {therapistData.map((value, index) => (
+                    <MenuItem
+                      key={`therapist-${index + 1}`}
+                      value={value.member_full_name}
+                    >
+                      {value.member_full_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>              
               <MuiThemeProvider theme={theme}>
                 <TextField
                   required

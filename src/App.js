@@ -259,7 +259,7 @@ class MainApp extends React.Component {
             <Link style={navStyle} to="/accountsandinv">
               <ListItem button>
                 <ListItemIcon>
-                  <AccountBalanceWallet />
+                  {/* <AccountBalanceWallet /> */}
                 </ListItemIcon>
                 <ListItemText primary="Acounts & Invoices" />
               </ListItem>

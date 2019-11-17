@@ -108,7 +108,7 @@ class AccountsInvoicesTabs extends React.Component {
             onSelectedUpdated={this.handleTransactionsSelected}
           />
         )}
-        {value === 1 && (
+        {/* {value === 1 && (
           <TransactionsActions
             onUpdated={this.updateTransactionsTable}
             onDelete={this.deleteTransactions}
@@ -126,7 +126,7 @@ class AccountsInvoicesTabs extends React.Component {
             toggleUpdated={this.state.toggleInvoicesTableUpdated}
             onSelectedUpdated={this.handleInvoicesSelected}
           />
-        )}
+        )} */}
       </div>
     );
   }
