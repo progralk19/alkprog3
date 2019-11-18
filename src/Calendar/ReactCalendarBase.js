@@ -1040,10 +1040,10 @@ class ReactCalendarBase extends Component {
       clients: this.state.multiFilters.clients
     };    
     multiFilters.clients = event.target.value;
-    if (event.target.value.includes("All")) {
-      multiFilters.clients = ["All"];
-    }
-    this.handleMultiFitlerChanges(multiFilters);
+    // if (event.target.value.includes("All")) {
+    //   multiFilters.clients = ["All"];
+    // }
+    this.handleMultiFilterChanges(multiFilters);
   };
 
   handleTherapistMultiFilterChange = event => {    
@@ -1052,10 +1052,38 @@ class ReactCalendarBase extends Component {
       clients: this.state.multiFilters.clients
     };
     multiFilters.therapists = event.target.value;
-    if (event.target.value.includes("All")) {
-      multiFilters.therapists = ["All"];
+    // if (event.target.value.includes("All")) {
+    //   multiFilters.therapists = ["All"];
+    // }
+    this.handleMultiFilterChanges(multiFilters);
+  };
+
+  handleMultiFilterChanges = (multiFilters) => {
+    let { 
+      calEvents
+    } = this.state;
+    let filteredRes = [];
+    if (multiFilters.clients.length > 0) {
+      for (let i = 0, len = multiFilters.clients.length; 
+        i < len; i ++) {
+          filteredRes = filteredRes.concat(
+          calEvents.filter(val => this.checkClient(val.resource, multiFilters.clients[i]))
+        );
+      }
     }
-    this.handleMultiFitlerChanges(multiFilters);
+    if (multiFilters.therapists.length > 0) {
+      for (let i = 0, len = multiFilters.therapists.length; 
+        i < len; i ++) {
+          filteredRes = filteredRes.concat(
+            calEvents.filter(val => this.checkTherapist(val.resource, multiFilters.therapists[i]))
+        );
+      }
+    }
+    filteredRes = Array.from(new Set(filteredRes));
+    this.setState({ 
+      multiFilters: multiFilters, 
+      filteredCalEvents: filteredRes
+    });
   };
 
   checkClient = (resource, keyword) => {
@@ -1074,26 +1102,6 @@ class ReactCalendarBase extends Component {
       return true;
     }
     return false;
-  };
-
-  handleMultiFitlerChanges = (multiFilters) => {
-    let { 
-      calEvents
-    } = this.state;
-    if (multiFilters.clients.length > 0 && multiFilters.clients[0] !== "All") {
-      for (let i = 0, len = multiFilters.clients.length; i < len; i ++) {
-        calEvents = calEvents.filter(val => this.checkClient(val.resource, multiFilters.clients[i]));
-      }
-    }
-    if (multiFilters.therapists.length > 0 && multiFilters.therapists[0] !== "All") {
-      for (let i = 0, len = multiFilters.therapists.length; i < len; i ++) {
-        calEvents = calEvents.filter(val => this.checkTherapist(val.resource, multiFilters.therapists[i]));
-      }
-    }
-    this.setState({ 
-      multiFilters: multiFilters, 
-      filteredCalEvents: calEvents
-    });
   };
 
   handleNewCategoryDialogOpen = () => {
@@ -1250,12 +1258,12 @@ class ReactCalendarBase extends Component {
                 </div>
               )}
             >
-              <MenuItem
+              {/* <MenuItem
                 key={`client-all`}
                 value={`All`}
               >
                 {`All`}
-              </MenuItem>
+              </MenuItem> */}
               {clientData.map((value, index) => (
                 <MenuItem
                   key={`client-${index + 1}`}
@@ -1283,12 +1291,12 @@ class ReactCalendarBase extends Component {
                 </div>
               )}
             >
-              <MenuItem
+              {/* <MenuItem
                 key={`therapist-all`}
                 value={`All`}
               >
                 {`All`}
-              </MenuItem>
+              </MenuItem> */}
               {therapistData.map((value, index) => (
                 <MenuItem
                   key={`therapist-${index + 1}`}
