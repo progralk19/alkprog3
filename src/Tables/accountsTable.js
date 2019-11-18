@@ -218,7 +218,6 @@ class AccountsTable extends React.Component {
 
   async componentDidMount() {
     const accountsResp = await API.get("/accounts/accounts2");
-    console.log(accountsResp)
     this.setState({
       accountData: accountsResp.data.data
     });

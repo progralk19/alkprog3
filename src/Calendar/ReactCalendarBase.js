@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Children } from "react";
 import { withRouter } from "react-router";
 
 //import BigCalendar from "react-big-calendar";
@@ -24,6 +24,7 @@ import FormLabel from "@material-ui/core/FormLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForeverOutlined";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+// Below is the CSS file being used. I have uploaed it and named it calendarStyle.css
 import "./calendarStyle.css";
 import MomentUtils from "@date-io/moment";
 import {
@@ -42,13 +43,15 @@ import Snackbar from "@material-ui/core/Snackbar";
 import MySnackbarContentWrapper from "../common/MySnackbarContentWrapper";
 
 import API from "../utils/API";
-import { SketchPicker } from "react-color";
 
+import { SketchPicker } from "react-color";
 import Select from "@material-ui/core/Select";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import Chip from "@material-ui/core/Chip";
 import { isNull } from "util";
+
+let mdyState = "month";
 
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
@@ -99,7 +102,6 @@ const styles = theme => ({
   root3: {
     width: "100%"
   },
-
   categoryButton: {
     marginTop: theme.spacing(2),
     marginRight: theme.spacing(2),
@@ -109,9 +111,7 @@ const styles = theme => ({
       backgroundColor: "#80cbc4"
     }
   },
-
   /* NEW */
-
   colorPicker: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
@@ -214,25 +214,10 @@ const customFreqOptions = [
   */
 ];
 
-const eventColor = (attendance, color) => {
-  let edgeColor = "#80cbc4";
-  let backColor = "#80cbc4";
-  if (attendance === "Present ($)") {
-    edgeColor = "green";
-  } else if (attendance === "Absent, no notice ($)") {
-    edgeColor = "red";
-  } else if (attendance === "Absent, notice") {
-    edgeColor = "yellow";
-  }
-  if (!isNull(color) && (color.indexOf('#') !== -1)) {
-      backColor = color;
-  }
 
-  return {
-      border: "none",
-      backgroundColor: backColor,
-      borderLeft: "5px solid " + edgeColor
-  };
+const selectView = (onView, where) => {
+  mdyState = where;
+  onView(where);
 };
 
 const CustomToolbar = ({ label, onNavigate, view, onView }) => {
@@ -256,21 +241,21 @@ const CustomToolbar = ({ label, onNavigate, view, onView }) => {
         <button
           type="button"
           className={view === "month" ? "rbc-active" : ""}
-          onClick={() => onView("month")}
+          onClick={() => selectView(onView, "month")}
         >
           Month
         </button>
         <button
           type="button"
           className={view === "week" ? "rbc-active" : ""}
-          onClick={() => onView("week")}
+          onClick={() => selectView(onView, "week")}
         >
           Week
         </button>
         <button
           type="button"
           className={view === "day" ? "rbc-active" : ""}
-          onClick={() => onView("day")}
+          onClick={() => selectView(onView, "day")}
         >
           Day
         </button>
@@ -294,53 +279,76 @@ const DefaultEventWrapper = ({
     clientInfo = event.resource.clients;
     therapistInfo = event.resource.therapists;
   }
+
+  let backColor = event.resource.category;
+  if (isNull(backColor) || (backColor.indexOf('#') !== 0)) {
+    backColor = "80cbc4";
+  }
+
+  // const { className } = children.props;
+  const className = "rbc-event";
+
+  const title = `${localizer.format(
+    event.start,
+    "h:mm"
+  )} - ${localizer.format(event.end, "h:mm a")}; ${clientInfo} (${
+    therapistInfo
+  })`;
+  let edgeColor;
+  if (event.resource.attendance === "Present ($)") {
+      edgeColor = "green";
+  } else if (event.resource.attendance === "Absent, no notice ($)") {    
+      edgeColor = "red";
+  } else if (event.resource.attendance === "Absent, notice") {
+      edgeColor = "yellow";
+  }
+  if (mdyState === 'month')
+    edgeColor = edgeColor+'-month';
+
+  const customClass = `${className} rbc-event--${edgeColor}`;
+  const hourStart =
+    60 * moment(event.start).hour() + moment(event.start).minutes();
+  const hourStop = 60 * moment(event.end).hour() + moment(event.end).minutes();
+  const top = (hourStart * 100) / (60 * 24);
+  const height = ((hourStop - hourStart) * 100) / (60 * 24);
+
   return type === "date" ? (
     children.props.type === "popup" ? (
       <div
         type="popup"
         tabIndex="0"
-        className="rbc-event"
-        style={eventColor(
-          event.resource.attendance,
-          event.resource.category
-        )}
+        className={customClass}
         onClick={() => onSelect(event)}
+        style={{ backgroundColor: backColor }}
       >
-        <div className="rbc-event-content" title={event.title}>
-          {/* {localizer.format(event.start, "h:mm")} -{" "} commented by sasa*/}
-          {localizer.format(event.start, "h:mm")}-
-          {localizer.format(event.end, "h:mm a")}; {clientInfo} (
-          {therapistInfo})
+        <div className="rbc-event-content" title={title}>
+          {title}
         </div>
       </div>
     ) : (
       <div
         tabIndex="0"
-        className="rbc-event"
-        style={eventColor(event.resource.attendance, event.resource.category)}
+        className={customClass}
+        style={{ height: "100%", backgroundColor: backColor }}
         onClick={() => onSelect(event)}
       >
-        <div className="rbc-event-content" title={event.title}>
-          {localizer.format(event.start, "h:mm")}-
-          {localizer.format(event.end, "h:mm a")}; {clientInfo} (
-          {therapistInfo})
+        <div className="rbc-event-content" title={title}>
+          {title}
         </div>
       </div>
     )
   ) : (
     <div
       title={event.title}
-      className={selected ? "rbc-event rbc-selected" : "rbc-event"}
-      style={eventColor(event.resource.attendance, event.resource.category)}
-      // style={{...eventColor(
-      //   event.resource.attendance,
-      //   event.resource.category
-      // ), gridRow: `${gridRowStart} / span ${hourStop - hourStart}`}}
+      className={customClass}
+      style={{ gridRow: "1 / span 1", top: `${top}%`, height: `${height}%`,
+                backgroundColor: backColor
+             }}
       onClick={() => onClick()}
     >
-      <div className="rbc-event-label">{label}</div>
+      <div className="rbc-event-label">{label};</div>
       <div className="rbc-event-content">
-        {event.resource.client} ({therapistInfo})
+        {event.resource.client} ({event.resource.therapist})
       </div>
     </div>
   );
@@ -444,7 +452,7 @@ class ReactCalendarBase extends Component {
         client: "All",
         category: "All"
       },
-      multiFilters: {
+       multiFilters: {
         therapists: [],
         clients: []
       },
@@ -508,7 +516,7 @@ class ReactCalendarBase extends Component {
       transType: this.state.transType,
       newDescription: "Session with " + this.state.newTherapist,      
       newClients: this.state.newClients,
-      newTherapists: this.state.newTherapists,
+      newTherapists: this.state.newTherapists
     };
 
     //Here I have just added some basic validation messages for fields that are needed for repeat appointments
@@ -612,17 +620,17 @@ class ReactCalendarBase extends Component {
       const filteredCalEvents = calEvents.slice();
       const categories = categoriesResp.data.data || [];
       this.setState(
-      {
-        calEvents,
-        therapistData,
-        clientData,
-        filteredCalEvents,
-        categories
-      },
-      () => {
-        // this.changeContentWithClientId()
-      }
-    );
+        {
+          calEvents,
+          therapistData,
+          clientData,
+          filteredCalEvents,
+          categories
+        },
+        () => {
+          // this.changeContentWithClientId()
+        }
+      );
     } catch (error) {
       console.log(error);
     }
@@ -1034,7 +1042,7 @@ class ReactCalendarBase extends Component {
     this.setState({ filters, filteredCalEvents: filteredCalEvents2 });
   };
 
-  handleCategoryChange = event => {    
+  handleCategoryChange = event => {
     this.setState({ newCategory: event.target.value });
   };
 
@@ -1107,7 +1115,6 @@ class ReactCalendarBase extends Component {
     }
     return false;
   };
-
   handleNewCategoryDialogOpen = () => {
     this.setState({ isNewCategoryDialog: true });
   };
@@ -1120,7 +1127,7 @@ class ReactCalendarBase extends Component {
       this.setState({
         isNewCategoryDialog: false
       });
-      await this.updateContent();
+      await this.updateContent();      
     });
   };
 
@@ -1164,7 +1171,6 @@ class ReactCalendarBase extends Component {
         style: style
     };
   };
-
   render() {
     const { classes } = this.props;
     //const classes = withStyles();
@@ -1183,6 +1189,7 @@ class ReactCalendarBase extends Component {
       return <Redirect to="/calendar/a" />;
     }
     */
+
     return (
       <div>
         <Container style={{ height: 1000 }} maxWidth="lg">
@@ -1311,7 +1318,7 @@ class ReactCalendarBase extends Component {
               ))}
             </Select>
           </FormControl>
-          
+  
           <TextField
             id="categoryFilter"
             select
@@ -1337,6 +1344,7 @@ class ReactCalendarBase extends Component {
                 </MenuItem>
               );
             })}
+
           </TextField>
 
           <Button
@@ -1374,8 +1382,10 @@ class ReactCalendarBase extends Component {
             <DialogActions>
               <Button onClick={() => this.handleNewCategorySave()}>Save</Button>
               <Button onClick={() => this.handleNewCategoryCancel()} autoFocus>Cancel</Button>
+
             </DialogActions>
           </Dialog>
+
           <Calendar
             className={classes.root}
             selectable={true}
@@ -1389,9 +1399,9 @@ class ReactCalendarBase extends Component {
             onSelectEvent={this.handleClickOpen2}
             onSelectSlot={this.handleClickOpen}
             dayPropGetter={customDayPropGetter}
-            // (this sets the start time of 8am)
+            // // (this sets the start time of 8am)
             // min={new Date(2000, 1, 1, 8)}
-            // this sets the end time of 8pm)
+            // // this sets the end time of 8pm)
             // max={new Date(2000, 1, 1, 20)}
             popup={true}
             components={{
@@ -1401,6 +1411,9 @@ class ReactCalendarBase extends Component {
               toolbar: CustomToolbar
             }}
             eventPropGetter={(this.eventStyleGetter)}
+            // slotPropGetter={(date) => {
+            //   console.log(date)
+            // }}
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
@@ -1573,7 +1586,7 @@ class ReactCalendarBase extends Component {
               </FormControl>
               : ''
               }
-                  
+
               <MuiThemeProvider theme={theme}>
                 <TextField
                   required
@@ -1609,6 +1622,7 @@ class ReactCalendarBase extends Component {
                 {this.state.categories.map(option => (
                   <MenuItem key={option.name} value={option.color}>
                     {option.name}
+
                   </MenuItem>
                 ))}
               </TextField>
@@ -2157,6 +2171,7 @@ class ReactCalendarBase extends Component {
                         value={selectedDate}
                         onChange={this.handleDateChangeStart}
                       />
+
                       <TimePicker
                         margin="normal"
                         inputVariant="outlined"
@@ -2438,6 +2453,7 @@ class ReactCalendarBase extends Component {
                   <Button
                     onClick={() => {
                       this.onSubmit();
+                      //this.reloadPage();
                     }}
                     color="primary"
                   >
