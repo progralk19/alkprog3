@@ -66,6 +66,21 @@ class AccountInvController {
     }
   }
 
+  static async getAllAccountsParam(req, res) {
+    try {
+      const allAccounts = await AccountInvService.getAccountsParam(req.body);
+      if (allAccounts.length > 0) {
+        util.setSuccess(200, "Accounts retrieved", allAccounts);
+      } else {
+        util.setSuccess(200, "No Accounts found");
+      }
+      return util.send(res);
+    } catch (error) {
+      util.setError(400, error);
+      return util.send(res);
+    }
+  }
+
   static async getDetailAccounts(req, res) {
     try {
       const detailAccounts = await AccountInvService.getAccountDetail();
@@ -86,6 +101,22 @@ class AccountInvController {
       const detailAccounts2 = await AccountInvService.getAccountDetail2();
       if (detailAccounts2.length > 0) {
         util.setSuccess(200, "Account details retrieved", detailAccounts2);
+      } else {
+        util.setSuccess(200, "No Account details found");
+      }
+      return util.send(res);
+    } catch (error) {
+      util.setError(400, error);
+      return util.send(res);
+    }
+  }
+
+  static async getDetailAccountsBE(req, res) {
+    const data = req.body;
+    try {
+      const detailAccounts = await AccountInvService.getAccountDetailByBE(data);
+      if (detailAccounts.length > 0) {
+        util.setSuccess(200, "Account details retrieved", detailAccounts);
       } else {
         util.setSuccess(200, "No Account details found");
       }

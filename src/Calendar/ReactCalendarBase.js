@@ -332,6 +332,10 @@ const DefaultEventWrapper = ({
       title={event.title}
       className={selected ? "rbc-event rbc-selected" : "rbc-event"}
       style={eventColor(event.resource.attendance, event.resource.category)}
+      // style={{...eventColor(
+      //   event.resource.attendance,
+      //   event.resource.category
+      // ), gridRow: `${gridRowStart} / span ${hourStop - hourStart}`}}
       onClick={() => onClick()}
     >
       <div className="rbc-event-label">{label}</div>

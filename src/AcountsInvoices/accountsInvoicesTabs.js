@@ -21,24 +21,32 @@ const styles = theme => ({
   }
 });
 class AccountsInvoicesTabs extends React.Component {
-  state = {
-    value: 0,
-    toggleAccountsTableUpdated: false,
-    selectedAccountIds: [],
-    toggleTransactionsTableUpdated: false,
-    selectedTransactionIds: [],
-    toggleInvoicesTableUpdated: false,
-    selectedInvoiceIds: []
-  };
+  constructor(props) {
+    super(props);
+    
+    this.state = {
+      value: 0,
+      toggleAccountsTableUpdated: false,
+      selectedAccountIds: [],
+      toggleTransactionsTableUpdated: false,
+      selectedTransactionIds: [],
+      toggleInvoicesTableUpdated: false,
+      selectedInvoiceIds: [],
+      startDate: '',
+      endDate: ''
+    };
+  }  
 
   handleChangeTab = (event, value) => {
     this.setState({ value });
   };
 
-  updateAccountsTable = () => {
-    this.setState(prevState => ({
-      toggleAccountsTableUpdated: !prevState.toggleAccountsTableUpdated
-    }));
+  updateAccountsTable = (start, end) => {
+    this.setState((prevState => ({
+      toggleAccountsTableUpdated: !prevState.toggleAccountsTableUpdated,
+      startDate: start,
+      endDate: end
+    })));
   };
 
   updateTransactionsTable = () => {
@@ -106,6 +114,8 @@ class AccountsInvoicesTabs extends React.Component {
           <AccountsTable
             toggleUpdated={this.state.toggleAccountsTableUpdated}
             onSelectedUpdated={this.handleTransactionsSelected}
+            startDate={ this.state.startDate }
+            endDate={ this.state.endDate }
           />
         )}
         {/* {value === 1 && (

@@ -132,28 +132,34 @@ const styles = theme => ({
 });
 
 class AccountDetailsTable extends React.Component {
-  state = {
-    order: "asc",
-    open: false,
-    orderBy: "",
-    accountDetailData: [],
-    selectedIndex: null,
-    page: 0,
-    rowsPerPage: 10,
-    redirect: false,
-    curClientId: 0,
-    billingEmail: "bjoe@mail.com",
-    account: "",
-    curBillEmail: ""
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      order: "asc",
+      open: false,
+      orderBy: "",
+      accountDetailData: [],
+      selectedIndex: null,
+      page: 0,
+      rowsPerPage: 10,
+      redirect: false,
+      curClientId: 0,
+      billingEmail: localStorage.getItem("BillEmail"),
+      account: "",
+      curBillEmail: localStorage.getItem("BillEmail")
+    };
+  }
 
   async componentDidMount() {
     try {
-      const accountDetailsResp = await API.get("/accounts/accountdetails2");
-      //console.log("Got account detail data!");
-      this.setState({
-        accountDetailData: accountDetailsResp.data.data
-        //account: this.props.location.state.curBillEmail
+      const obj = {
+        bEmail: this.state.billingEmail
+      };
+      API.post("/accounts/accountdetailsbe", obj)
+      .then(async res => {
+        this.setState({
+          accountDetailData: res.data.data
+        });
       });
     } catch (error) {
       console.log("Account detail data fetching error: ", error);

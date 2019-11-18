@@ -199,20 +199,26 @@ const theme2 = createMuiTheme({
 });
 
 class AccountsTable extends React.Component {
-  state = {
-    order: "asc",
-    orderBy: "",
-    accountData: [],
-    page: 0,
-    rowsPerPage: 10,
-    selected: [],
-    open: false,
-    redirect: false,
-    curBillEmail: ""
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      order: "asc",
+      orderBy: "",
+      accountData: [],
+      page: 0,
+      rowsPerPage: 10,
+      selected: [],
+      open: false,
+      redirect: false,
+      curBillEmail: "",
+      startDate: props.startDate,
+      endDate: props.endDate
+    };
+  }
 
   async componentDidMount() {
     const accountsResp = await API.get("/accounts/accounts2");
+    console.log(accountsResp)
     this.setState({
       accountData: accountsResp.data.data
     });
@@ -248,10 +254,29 @@ class AccountsTable extends React.Component {
     );
   };
 
-  async componentDidUpdate(prevProps, prevState) {
-    if (prevProps.toggleUpdated !== this.props.toggleUpdated) {
-      await this.updateTableContent();
+  async componentWillReceiveProps(nextProps) {
+    try {      
+      const obj = {
+        startDate: nextProps.startDate,
+        endDate: nextProps.endDate
+      };
+      API.post("/accounts/accountspr", obj)
+      .then(async res => {
+        this.setState({
+          accountData: res.data.data
+        });
+      });
+    } catch (error) {
+      console.log("Account detail data fetching error: ", error);
     }
+    //const accountsResp = await API.post("/accounts/accounts2");    
+  }
+
+  async componentDidUpdate(prevProps, prevState) { 
+      
+    // if (prevProps.toggleUpdated !== this.props.toggleUpdated) {
+    //   await this.updateTableContent();
+    // }
 
     // const { selected } = this.state
     // const { prevSelected } = prevState
@@ -313,6 +338,7 @@ class AccountsTable extends React.Component {
 
   //redirect to account details;
   handleClickRedirect = (accountBillEmail = "") => {
+    localStorage.setItem("BillEmail", accountBillEmail);
     this.setState({ redirect: true, curBillEmail: accountBillEmail });
   };
 

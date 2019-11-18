@@ -71,33 +71,47 @@ const theme2 = createMuiTheme({
 });
 
 class AccountsActions extends React.Component {
-  state = {
-    anchorEl: null,
-    openTransactions: false,
-    openDateRange: false,
-    payor: "",
-    startDate: moment().format("YYYY-MM-DD"),
-    endDate: moment()
-      .add(1, "month")
-      .format("YYYY-MM-DD"),
-    invoiceDate: "",
-    invoiceAmount: "",
-    dueDate: "",
-    invoiceNotes: ""
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      anchorEl: null,
+      openTransactions: false,
+      openDateRange: false,
+      payor: "",
+      startDate: moment().format("YYYY-MM-DD"),
+      endDate: moment()
+        .add(1, "month")
+        .format("YYYY-MM-DD"),
+      invoiceDate: "",
+      invoiceAmount: "",
+      dueDate: "",
+      invoiceNotes: ""
+    };
+  }
 
   /* change of team member dropdown */
   handleChange = name => event => {
     this.setState({ [name]: event.target.value });
   };
 
+  handleSearchClick = () => {
+    this.props.onUpdated(
+      '',
+      ''
+    );
+  };
+
   /* show date range diaglog box */
-  handleClickOpenDateRange = () => {
+  handleClickOpenDateRange = () => {    
     this.setState({ openDateRange: true });
   };
 
   /* close date range diaglog box */
   handleCloseDateRange = () => {
+    this.props.onUpdated(
+      this.state.startDate,
+      this.state.endDate
+    );
     this.setState({ openDateRange: false });
   };
 
@@ -215,7 +229,11 @@ class AccountsActions extends React.Component {
                   Show Inactive
                 </Button>
                 {/* Search button */}
-                <Button variant="contained" className={classes.button}>
+                <Button 
+                  variant="contained" 
+                  className={classes.button}
+                  onClick={this.handleSearchClick}
+                >
                   <Search
                     className={classNames(classes.leftIcon, classes.iconSmall)}
                   />

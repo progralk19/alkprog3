@@ -7,8 +7,10 @@ const AccountInvController = require("../controllers/AccountInvController");
 
 router.get("/accounts", AccountInvController.getAllAccounts);
 router.get("/accounts2", AccountInvController.getAllAccounts2);
+router.post("/accountspr", AccountInvController.getAllAccountsParam);
 router.get("/accountdetails", AccountInvController.getDetailAccounts);
 router.get("/accountdetails2", AccountInvController.getDetailAccounts2);
+router.post("/accountdetailsbe", AccountInvController.getDetailAccountsBE);
 //router.get("/transactions", AccountInvController.getAllTransactions);
 //router.get("/transactions2", AccountInvController.getAllTransactions2);
 router.get("/payors", AccountInvController.getDistinctPayors);
