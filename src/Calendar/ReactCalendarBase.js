@@ -76,11 +76,13 @@ const styles = theme => ({
     width: 194
   },
   formControlNew: {
-    margin: theme.spacing(1),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     width: 400
   },
   formControlFilter: {
-    margin: theme.spacing(1),
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
     minWidth: 194,
     maxWidth: 300
   },
@@ -212,10 +214,9 @@ const customFreqOptions = [
   */
 ];
 
-const categories = [];
-
-const eventEdgeColor = attendance => {
-  let edgeColor;
+const eventColor = (attendance, color) => {
+  let edgeColor = "#80cbc4";
+  let backColor = "#80cbc4";
   if (attendance === "Present ($)") {
     edgeColor = "green";
   } else if (attendance === "Absent, no notice ($)") {
@@ -223,17 +224,15 @@ const eventEdgeColor = attendance => {
   } else if (attendance === "Absent, notice") {
     edgeColor = "yellow";
   }
+  if (!isNull(color) && (color.indexOf('#') !== -1)) {
+      backColor = color;
+  }
 
-  return attendance
-    ? {
-        border: "none",
-        //backgroundColor: "#80cbc4",
-        borderLeft: "5px solid " + edgeColor
-      }
-    : {
-        border: "none"
-        //backgroundColor: "#80cbc4"
-      };
+  return {
+      border: "none",
+      backgroundColor: backColor,
+      borderLeft: "5px solid " + edgeColor
+  };
 };
 
 const CustomToolbar = ({ label, onNavigate, view, onView }) => {
@@ -301,7 +300,10 @@ const DefaultEventWrapper = ({
         type="popup"
         tabIndex="0"
         className="rbc-event"
-        style={eventEdgeColor(event.resource.attendance)}
+        style={eventColor(
+          event.resource.attendance,
+          event.resource.category
+        )}
         onClick={() => onSelect(event)}
       >
         <div className="rbc-event-content" title={event.title}>
@@ -315,7 +317,7 @@ const DefaultEventWrapper = ({
       <div
         tabIndex="0"
         className="rbc-event"
-        style={eventEdgeColor(event.resource.attendance)}
+        style={eventColor(event.resource.attendance, event.resource.category)}
         onClick={() => onSelect(event)}
       >
         <div className="rbc-event-content" title={event.title}>
@@ -329,7 +331,7 @@ const DefaultEventWrapper = ({
     <div
       title={event.title}
       className={selected ? "rbc-event rbc-selected" : "rbc-event"}
-      style={eventEdgeColor(event.resource.attendance)}
+      style={eventColor(event.resource.attendance, event.resource.category)}
       onClick={() => onClick()}
     >
       <div className="rbc-event-label">{label}</div>
@@ -448,7 +450,8 @@ class ReactCalendarBase extends Component {
         label: "",
         value: "",
         color: "#000000"
-      }
+      },
+      categories: []
     };
   }
 
@@ -503,7 +506,6 @@ class ReactCalendarBase extends Component {
       newClients: this.state.newClients,
       newTherapists: this.state.newTherapists,
     };
-    console.log("submitobj", obj);
 
     //Here I have just added some basic validation messages for fields that are needed for repeat appointments
     //I guess you will add validations in your form later on
@@ -527,7 +529,9 @@ class ReactCalendarBase extends Component {
           .then(async response => {
             this.setState({
               obj,
-              open: false
+              open: false,
+              newClients: [],
+              newTherapists: [],
               // redirect: true
             });
             await this.updateContent();
@@ -537,7 +541,9 @@ class ReactCalendarBase extends Component {
       API.post("/events/insert", obj).then(async response => {
         this.setState({
           obj,
-          open: false
+          open: false,
+          newClients: [],
+          newTherapists: [],
           // redirect: true
         });
         await this.updateContent();
@@ -586,6 +592,7 @@ class ReactCalendarBase extends Component {
       const eventsResp = await API.get("/events");
       const therapistsResp = await API.get("/members/getTherapists");
       const clientsResp = await API.get("/clients/all");
+      const categoriesResp = await API.get("/categories");
       const calEvents =
         (eventsResp.data.data || []).map(event => {
           const { title, start, end, ...resource } = event;
@@ -599,17 +606,19 @@ class ReactCalendarBase extends Component {
       const therapistData = therapistsResp.data.data || [];
       const clientData = clientsResp.data.data || [];
       const filteredCalEvents = calEvents.slice();
+      const categories = categoriesResp.data.data || [];
       this.setState(
-        {
-          calEvents,
-          therapistData,
-          clientData,
-          filteredCalEvents
-        },
-        () => {
-          // this.changeContentWithClientId()
-        }
-      );
+      {
+        calEvents,
+        therapistData,
+        clientData,
+        filteredCalEvents,
+        categories
+      },
+      () => {
+        // this.changeContentWithClientId()
+      }
+    );
     } catch (error) {
       console.log(error);
     }
@@ -1021,6 +1030,10 @@ class ReactCalendarBase extends Component {
     this.setState({ filters, filteredCalEvents: filteredCalEvents2 });
   };
 
+  handleCategoryChange = event => {    
+    this.setState({ newCategory: event.target.value });
+  };
+
   handleClientMultiFilterChange = event => {
     const multiFilters = {
       therapists: this.state.multiFilters.therapists,
@@ -1087,21 +1100,17 @@ class ReactCalendarBase extends Component {
     this.setState({ isNewCategoryDialog: true });
   };
 
-  /*   handleNewCategorySave = () => {
+  handleNewCategorySave = () => {
     const { newCategoryData } = this.state;
 
-    if (newCategoryData.value) {
-      categories.push(newCategoryData);
+    API.post("/categories/insert", newCategoryData)
+    .then(async res => {
       this.setState({
-        newCategoryData: {
-          label: "",
-          value: "",
-          color: "#000000"
-        },
         isNewCategoryDialog: false
       });
-    }
-  }; */
+      await this.updateContent();
+    });
+  };
 
   handleNewCategoryCancel = () => {
     this.setState({
@@ -1127,6 +1136,21 @@ class ReactCalendarBase extends Component {
     newCategoryData.color = color.hex;
 
     this.setState(newCategoryData);
+  };
+
+  eventStyleGetter = (event, start, end, isSelected) => {    
+    var backgroundColor = event.resource.category;
+    var style = {
+        backgroundColor: backgroundColor,
+        borderRadius: '0px',
+        opacity: 0.8,
+        color: 'black',
+        border: '0px',
+        display: 'block'
+    };
+    return {
+        style: style
+    };
   };
 
   render() {
@@ -1216,6 +1240,8 @@ class ReactCalendarBase extends Component {
               multiple
               value={multiFilters.clients}
               onChange={this.handleClientMultiFilterChange}
+              // margin="normal"
+              // variant="outlined"
               renderValue={selected => (
                 <div className={classes.chips}>
                   {selected.map(value => (
@@ -1247,6 +1273,8 @@ class ReactCalendarBase extends Component {
               multiple
               value={multiFilters.therapists}
               onChange={this.handleTherapistMultiFilterChange}
+              // margin="normal"
+              // variant="outlined"
               renderValue={selected => (
                 <div className={classes.chips}>
                   {selected.map(value => (
@@ -1290,10 +1318,10 @@ class ReactCalendarBase extends Component {
             <MenuItem value="All" key="category-0">
               All
             </MenuItem>
-            {categories.map((value, index) => {
+            {this.state.categories.map((value, index) => {
               return (
-                <MenuItem value={value.value} key={`category-${index + 1}`}>
-                  {value.value}
+                <MenuItem value={value.color} key={`category-${index + 1}`}>
+                  {value.name}
                 </MenuItem>
               );
             })}
@@ -1332,10 +1360,8 @@ class ReactCalendarBase extends Component {
               />
             </DialogContent>
             <DialogActions>
-              {/*    <Button onClick={() => this.handleNewCategorySave()}>save</Button> */}
-              <Button onClick={() => this.handleNewCategoryCancel()} autoFocus>
-                cancel
-              </Button>
+              <Button onClick={() => this.handleNewCategorySave()}>Save</Button>
+              <Button onClick={() => this.handleNewCategoryCancel()} autoFocus>Cancel</Button>
             </DialogActions>
           </Dialog>
           <Calendar
@@ -1362,6 +1388,7 @@ class ReactCalendarBase extends Component {
               eventWrapper: DefaultEventWrapper,
               toolbar: CustomToolbar
             }}
+            eventPropGetter={(this.eventStyleGetter)}
           />
         </Container>
         {this.state.redirect ? <Redirect push to="/calendar/n" /> : null}
@@ -1481,6 +1508,8 @@ class ReactCalendarBase extends Component {
                   multiple
                   value={this.state.existingClients}
                   onChange={this.handleMultiSelectorChange("")}
+                  // margin="normal"
+                  // variant="outlined"
                   renderValue={selected => (
                     <div className={classes.chips}>
                       {selected.map(value => (
@@ -1510,6 +1539,8 @@ class ReactCalendarBase extends Component {
                   multiple
                   value={this.state.existingTherapists}
                   onChange={this.handleMultiSelectorChange("")}
+                  // margin="normal"
+                  // variant="outlined"
                   renderValue={selected => (
                     <div className={classes.chips}>
                       {selected.map(value => (
@@ -1563,9 +1594,9 @@ class ReactCalendarBase extends Component {
                   }
                 }}
               >
-                {categories.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
+                {this.state.categories.map(option => (
+                  <MenuItem key={option.name} value={option.color}>
+                    {option.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -2020,6 +2051,8 @@ class ReactCalendarBase extends Component {
                   multiple
                   value={this.state.newClients}
                   onChange={this.handleMultiSelectorChange("newClients")}
+                  // margin="normal"
+                  // variant="outlined"
                   renderValue={selected => (
                     <div className={classes.chips}>
                       {selected.map(value => (
@@ -2045,6 +2078,8 @@ class ReactCalendarBase extends Component {
                   multiple
                   value={this.state.newTherapists}
                   onChange={this.handleMultiSelectorChange("newTherapists")}
+                  // margin="normal"
+                  // variant="outlined"
                   renderValue={selected => (
                     <div className={classes.chips}>
                       {selected.map(value => (
@@ -2077,12 +2112,12 @@ class ReactCalendarBase extends Component {
               </MuiThemeProvider>
               <TextField
                 required
-                id="newCategory"
+                id="newEventCategory"
                 select
                 label="Category"
                 className={classes.textField2}
                 value={this.state.newCategory}
-                onChange={e => this.setState({ newCategory: e.target.value })}
+                onChange={this.handleCategoryChange}
                 margin="normal"
                 variant="outlined"
                 SelectProps={{
@@ -2091,11 +2126,12 @@ class ReactCalendarBase extends Component {
                   }
                 }}
               >
-                {categories.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
+              { this.state.categories.map(option => (                  
+                <MenuItem key={option.name} value={option.color}>
+                  {option.name}
+                </MenuItem>
+                ))
+              }
               </TextField>
               <MuiThemeProvider theme={theme}>
                 <MuiPickersUtilsProvider utils={MomentUtils}>
@@ -2109,7 +2145,6 @@ class ReactCalendarBase extends Component {
                         value={selectedDate}
                         onChange={this.handleDateChangeStart}
                       />
-
                       <TimePicker
                         margin="normal"
                         inputVariant="outlined"
