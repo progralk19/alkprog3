@@ -212,7 +212,8 @@ class AccountsTable extends React.Component {
       redirect: false,
       curBillEmail: "",
       startDate: props.startDate,
-      endDate: props.endDate
+      endDate: props.endDate,
+      keyword: props.keyword
     };
   }
 
@@ -255,25 +256,28 @@ class AccountsTable extends React.Component {
 
   async componentDidUpdate(prevProps) {
     if (prevProps.startDate != this.props.startDate ||
-      prevProps.startDate != this.props.startDate) {
-      try {      
+        prevProps.startDate != this.props.startDate ||
+        prevProps.keyword != this.props.keyword) {
+      try {
         const obj = {
           startDate: this.props.startDate,
-          endDate: this.props.endDate
+          endDate: this.props.endDate,
+          keyword: this.props.keyword
         };
         API.post("/accounts/accountspr", obj)
         .then(async res => {
           this.setState({
             accountData: res.data.data,
-            startDate: this.props.startDate,
-            endDate: this.props.endDate
+            startDate: '',
+            endDate: '',
+            keyword: ''
           });
         });
       } catch (error) {
         console.log("Account detail data fetching error: ", error);
       }
     }
-      
+    
     // if (prevProps.toggleUpdated !== this.props.toggleUpdated) {
     //   await this.updateTableContent();
     // }

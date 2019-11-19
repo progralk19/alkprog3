@@ -240,7 +240,7 @@ class EventService {
       if (start_dates.length == 1)
         // if it has no series of events.
         return firstQueryResult;
-
+        
       var sql =
         "INSERT INTO testevent (title, bill_type, client, therapist, location, category, start, end, repeats, repeat_option, end_repeat, num_occurences,  series_start_id, billing_email, session_cost, session_set_length, clients, therapists) VALUES";
 
@@ -279,13 +279,12 @@ class EventService {
           ", " +
           sessionLength +
           ",'" +
-          newClients
+          newClients +
           "','" +
-          newTherapists
+          newTherapists +
           "')";
         if (i < start_dates.length - 1) sql += ",";
       }
-
       return await query(sql);
     } catch (error) {
       throw error;

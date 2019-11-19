@@ -22,6 +22,7 @@ import { MuiPickersUtilsProvider, DatePicker } from "@material-ui/pickers";
 import Container from "@material-ui/core/Container";
 
 import Grid from "@material-ui/core/Grid";
+import TextField from '@material-ui/core/TextField';
 
 moment().toDate();
 
@@ -76,7 +77,7 @@ class AccountsActions extends React.Component {
     this.state = {
       anchorEl: null,
       openTransactions: false,
-      openDateRange: false,
+      openDateRange: false,      
       payor: "",
       startDate: moment().format("YYYY-MM-DD"),
       endDate: moment()
@@ -85,7 +86,10 @@ class AccountsActions extends React.Component {
       invoiceDate: "",
       invoiceAmount: "",
       dueDate: "",
-      invoiceNotes: ""
+      invoiceNotes: "",
+      // Added by Sasa for Search
+      openSearchDlg: false,
+      searchKeyWord: ''
     };
   }
 
@@ -95,10 +99,10 @@ class AccountsActions extends React.Component {
   };
 
   handleSearchClick = () => {
-    this.props.onUpdated(
-      '',
-      ''
-    );
+    this.setState({ 
+      openSearchDlg: true,
+      searchKeyWord: ''
+    });
   };
 
   /* show date range diaglog box */
@@ -110,7 +114,8 @@ class AccountsActions extends React.Component {
   handleCloseDateRange = () => {
     this.props.onUpdated(
       this.state.startDate,
-      this.state.endDate
+      this.state.endDate,
+      this.state.searchKeyWord
     );
     this.setState({ openDateRange: false });
   };
@@ -132,6 +137,27 @@ class AccountsActions extends React.Component {
 
   handleDateChangeEnd = date => {
     this.setState({ endDate: date.format("YYYY-MM-DD") });
+  };
+
+  handleChangeSearchKeyword = event => {
+    this.setState({ 
+      searchKeyWord: event.target.value 
+    });
+  }
+
+  handleSearchCloseAction = () => {
+    this.setState({ 
+      openSearchDlg: false
+    });
+  };
+
+  handleSearchAction = () => {
+    this.props.onUpdated(
+      '',
+      '',
+      this.state.searchKeyWord
+    );
+    this.setState({ openSearchDlg: false });
   };
 
   render() {
@@ -170,7 +196,7 @@ class AccountsActions extends React.Component {
                   </DialogTitle>
                   <DialogContent>
                     <MuiPickersUtilsProvider utils={MomentUtils}>
-                      <Grid container row>
+                      <Grid container>
                         <MuiThemeProvider theme={theme2}>
                           <DatePicker
                             inputVariant="outlined"
@@ -183,7 +209,7 @@ class AccountsActions extends React.Component {
                         </MuiThemeProvider>
                       </Grid>
                       <MuiThemeProvider theme={theme2}>
-                        <Grid container row>
+                        <Grid container>
                           <DatePicker
                             inputVariant="outlined"
                             margin="normal"
@@ -209,6 +235,49 @@ class AccountsActions extends React.Component {
                         color="primary"
                       >
                         Ok
+                      </Button>
+                    </DialogActions>
+                  </MuiThemeProvider>
+                </Dialog>
+
+                {/* Search dialog box */}
+                <Dialog
+                  open={this.state.openSearchDlg}
+                  onClose={this.handleSearchCloseAction}
+                >
+                  <DialogTitle id="form-search-dialog-title">
+                    Search
+                  </DialogTitle>
+                  <DialogContent>
+                    <MuiPickersUtilsProvider utils={MomentUtils}>
+                      <Grid container>
+                        <MuiThemeProvider theme={theme2}>
+                          <TextField
+                            id="form-search-dlg-textfield"
+                            className={classes.textField2}
+                            label="Keyword"
+                            margin="normal"
+                            variant="outlined"
+                            value={this.state.searchKeyWord}
+                            onChange={this.handleChangeSearchKeyword}
+                          />
+                        </MuiThemeProvider>
+                      </Grid>
+                    </MuiPickersUtilsProvider>
+                  </DialogContent>
+                  <MuiThemeProvider theme={theme2}>
+                    <DialogActions>
+                      <Button
+                        onClick={this.handleSearchCloseAction}
+                        color="primary"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={this.handleSearchAction}
+                        color="primary"
+                      >
+                        Search
                       </Button>
                     </DialogActions>
                   </MuiThemeProvider>

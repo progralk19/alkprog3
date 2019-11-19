@@ -82,7 +82,8 @@ class AccountInvService {
   static async getAccountsParam(param) {
     const {
       startDate,
-      endDate
+      endDate,
+      keyword
     } = param;
     const sql = `SELECT 
                 DATE_FORMAT(max(x.trans_date), '%m/%d/%Y') as last_pay_date, 
@@ -130,6 +131,21 @@ class AccountInvService {
         whereClasue = whereClasue+` AND x.trans_date <= '${endDate}' `;
       } else {
         whereClasue = ` WHERE x.trans_date <= '${endDate}' `;
+      }
+    }
+    if (keyword.length > 0) {
+      const keywordClause = ` x.trans_date LIKE '%${keyword}%' OR
+                              y.payor LIKE '%${keyword}%' OR
+                              y.billing_email LIKE '%${keyword}%' OR
+                              y.billing_full_name LIKE '%${keyword}%' OR
+                              y.client_type LIKE '%${keyword}%' OR
+                              y.billing_phone LIKE '%${keyword}%' OR
+                              y.payment_type LIKE '%${keyword}%' OR
+                              y.client LIKE '%${keyword}%' `;
+      if (whereClasue.length > 0) {
+        whereClasue = whereClasue+` AND ${keywordClause} `;
+      } else {
+        whereClasue = ` WHERE ${keywordClause} `;
       }
     }
     try {

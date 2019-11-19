@@ -33,7 +33,8 @@ class AccountsInvoicesTabs extends React.Component {
       toggleInvoicesTableUpdated: false,
       selectedInvoiceIds: [],
       startDate: '',
-      endDate: ''
+      endDate: '',
+      keyword: ''
     };
   }  
 
@@ -41,11 +42,12 @@ class AccountsInvoicesTabs extends React.Component {
     this.setState({ value });
   };
 
-  updateAccountsTable = (start, end) => {
+  updateAccountsTable = (start, end, keyword) => {
     this.setState((prevState => ({
       toggleAccountsTableUpdated: !prevState.toggleAccountsTableUpdated,
       startDate: start,
-      endDate: end
+      endDate: end,
+      keyword: keyword
     })));
   };
 
@@ -116,6 +118,7 @@ class AccountsInvoicesTabs extends React.Component {
             onSelectedUpdated={this.handleTransactionsSelected}
             startDate={ this.state.startDate }
             endDate={ this.state.endDate }
+            keyword={ this.state.keyword }
           />
         )}
         {/* {value === 1 && (

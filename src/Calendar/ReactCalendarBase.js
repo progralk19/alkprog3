@@ -537,7 +537,7 @@ class ReactCalendarBase extends Component {
       } else {
         API.post("/events/insert", obj)
           // .then(res => console.log(res.data));
-          .then(async response => {
+          .then(async res => {
             this.setState({
               obj,
               open: false,
