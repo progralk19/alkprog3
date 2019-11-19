@@ -57,7 +57,7 @@ class AccountInvController {
       if (allAccounts2.length > 0) {
         util.setSuccess(200, "Accounts retrieved", allAccounts2);
       } else {
-        util.setSuccess(200, "No Accounts found");
+        util.setSuccess(200, "No Accounts found", []);
       }
       return util.send(res);
     } catch (error) {
@@ -72,7 +72,7 @@ class AccountInvController {
       if (allAccounts.length > 0) {
         util.setSuccess(200, "Accounts retrieved", allAccounts);
       } else {
-        util.setSuccess(200, "No Accounts found");
+        util.setSuccess(200, "No Accounts found", []);
       }
       return util.send(res);
     } catch (error) {
@@ -118,7 +118,7 @@ class AccountInvController {
       if (detailAccounts.length > 0) {
         util.setSuccess(200, "Account details retrieved", detailAccounts);
       } else {
-        util.setSuccess(200, "No Account details found");
+        util.setSuccess(200, "No Account details found", []);
       }
       return util.send(res);
     } catch (error) {
