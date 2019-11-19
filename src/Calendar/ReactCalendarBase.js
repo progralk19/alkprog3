@@ -279,7 +279,6 @@ const DefaultEventWrapper = ({
     clientInfo = event.resource.clients;
     therapistInfo = event.resource.therapists;
   }
-
   let backColor = event.resource.category;
   if (isNull(backColor) || (backColor.indexOf('#') !== 0)) {
     backColor = "80cbc4";
@@ -348,7 +347,7 @@ const DefaultEventWrapper = ({
     >
       <div className="rbc-event-label">{label};</div>
       <div className="rbc-event-content">
-        {event.resource.client} ({event.resource.therapist})
+        {clientInfo} ({therapistInfo})
       </div>
     </div>
   );
@@ -452,7 +451,7 @@ class ReactCalendarBase extends Component {
         client: "All",
         category: "All"
       },
-       multiFilters: {
+      multiFilters: {
         therapists: [],
         clients: []
       },
@@ -1049,7 +1048,7 @@ class ReactCalendarBase extends Component {
   handleClientMultiFilterChange = event => {
     const multiFilters = {
       therapists: this.state.multiFilters.therapists,
-      clients: this.state.multiFilters.clients
+      clients: this.state.multiFilters.clients,
     };    
     multiFilters.clients = event.target.value;
     // if (event.target.value.includes("All")) {
@@ -1075,10 +1074,13 @@ class ReactCalendarBase extends Component {
       calEvents
     } = this.state;
     let filteredRes = [];
+    let CfilterdRes = [];
+    let TfilterdRes = [];
+    
     if (multiFilters.clients.length > 0) {
       for (let i = 0, len = multiFilters.clients.length; 
         i < len; i ++) {
-          filteredRes = filteredRes.concat(
+          CfilterdRes = CfilterdRes.concat(
           calEvents.filter(val => this.checkClient(val.resource, multiFilters.clients[i]))
         );
       }
@@ -1086,12 +1088,17 @@ class ReactCalendarBase extends Component {
     if (multiFilters.therapists.length > 0) {
       for (let i = 0, len = multiFilters.therapists.length; 
         i < len; i ++) {
-          filteredRes = filteredRes.concat(
+          TfilterdRes = TfilterdRes.concat(
             calEvents.filter(val => this.checkTherapist(val.resource, multiFilters.therapists[i]))
         );
       }
     }
+    filteredRes = CfilterdRes.concat(TfilterdRes);
     filteredRes = Array.from(new Set(filteredRes));
+    if (multiFilters.clients.length == 0 &&
+      multiFilters.therapists.length == 0) {
+        filteredRes = calEvents;
+    }    
     this.setState({ 
       multiFilters: multiFilters, 
       filteredCalEvents: filteredRes

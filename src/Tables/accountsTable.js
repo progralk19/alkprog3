@@ -253,25 +253,26 @@ class AccountsTable extends React.Component {
     );
   };
 
-  async componentWillReceiveProps(nextProps) {
-    try {      
-      const obj = {
-        startDate: nextProps.startDate,
-        endDate: nextProps.endDate
-      };
-      API.post("/accounts/accountspr", obj)
-      .then(async res => {
-        this.setState({
-          accountData: res.data.data
+  async componentDidUpdate(prevProps) {
+    if (prevProps.startDate != this.props.startDate ||
+      prevProps.startDate != this.props.startDate) {
+      try {      
+        const obj = {
+          startDate: this.props.startDate,
+          endDate: this.props.endDate
+        };
+        API.post("/accounts/accountspr", obj)
+        .then(async res => {
+          this.setState({
+            accountData: res.data.data,
+            startDate: this.props.startDate,
+            endDate: this.props.endDate
+          });
         });
-      });
-    } catch (error) {
-      console.log("Account detail data fetching error: ", error);
+      } catch (error) {
+        console.log("Account detail data fetching error: ", error);
+      }
     }
-    //const accountsResp = await API.post("/accounts/accounts2");    
-  }
-
-  async componentDidUpdate(prevProps, prevState) { 
       
     // if (prevProps.toggleUpdated !== this.props.toggleUpdated) {
     //   await this.updateTableContent();
