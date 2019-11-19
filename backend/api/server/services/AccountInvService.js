@@ -134,8 +134,7 @@ class AccountInvService {
       }
     }
     if (keyword.length > 0) {
-      const keywordClause = ` x.trans_date LIKE '%${keyword}%' OR
-                              y.payor LIKE '%${keyword}%' OR
+      const keywordClause = ` y.payor LIKE '%${keyword}%' OR
                               y.billing_email LIKE '%${keyword}%' OR
                               y.billing_full_name LIKE '%${keyword}%' OR
                               y.client_type LIKE '%${keyword}%' OR
