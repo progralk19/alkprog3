@@ -144,7 +144,6 @@ class AccountDetailsTable extends React.Component {
       rowsPerPage: 10,
       redirect: false,
       curClientId: 0,
-      billingEmail: localStorage.getItem("BillEmail"),
       account: "",
       curBillEmail: localStorage.getItem("BillEmail")
     };
@@ -153,7 +152,9 @@ class AccountDetailsTable extends React.Component {
   async componentDidMount() {
     try {
       const obj = {
-        bEmail: this.state.billingEmail
+        bEmail: localStorage.getItem("BillEmail"),
+        startDate: localStorage.getItem("startDate"),
+        endDate: localStorage.getItem("endDate")
       };
       API.post("/accounts/accountdetailsbe", obj)
       .then(async res => {
@@ -224,12 +225,12 @@ class AccountDetailsTable extends React.Component {
                         tabIndex={-1}
                         key={n.id}
                       >
-                        <TableCell align="center">{n.date}</TableCell>
-                        <TableCell align="center">{n.client}</TableCell>
-                        <TableCell align="center">{n.description}</TableCell>
-                        <TableCell align="center">{n.session_cost}</TableCell>
-                        <TableCell align="center">{n.amount}</TableCell>
-                        <TableCell align="center">{n.balance}</TableCell>
+                        <TableCell align="center" key="date">{n.date}</TableCell>
+                        <TableCell align="center" key="client">{n.client}</TableCell>
+                        <TableCell align="center" key="description">{n.description}</TableCell>
+                        <TableCell align="center" key="session_cost">{n.session_cost}</TableCell>
+                        <TableCell align="center" key="amount">{n.amount}</TableCell>
+                        <TableCell align="center" key="balance">{n.balance}</TableCell>
                       </TableRow>
                     );
                   })}

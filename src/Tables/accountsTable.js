@@ -210,18 +210,30 @@ class AccountsTable extends React.Component {
       selected: [],
       open: false,
       redirect: false,
-      curBillEmail: "",
-      startDate: props.startDate,
-      endDate: props.endDate,
-      keyword: props.keyword
+      curBillEmail: ""
     };
   }
 
   async componentDidMount() {
-    const accountsResp = await API.get("/accounts/accounts2");
-    this.setState({
-      accountData: accountsResp.data.data
-    });
+    // const accountsResp = await API.get("/accounts/accounts2");
+    // this.setState({
+    //   accountData: accountsResp.data.data
+    // });
+    try {
+      const obj = {
+        startDate: localStorage.getItem('startDate'),
+        endDate: localStorage.getItem('endDate'),
+        keyword: this.props.keyword
+      };
+      API.post("/accounts/accountspr", obj)
+      .then(async res => {
+        this.setState({
+          accountData: res.data.data
+        });
+      });
+    } catch (error) {
+      console.log("Account detail data fetching error: ", error);
+    }
   }
 
   /*   async componentDidMount() {
@@ -267,17 +279,14 @@ class AccountsTable extends React.Component {
         API.post("/accounts/accountspr", obj)
         .then(async res => {
           this.setState({
-            accountData: res.data.data,
-            startDate: '',
-            endDate: '',
-            keyword: ''
+            accountData: res.data.data
           });
         });
       } catch (error) {
         console.log("Account detail data fetching error: ", error);
       }
     }
-    
+
     // if (prevProps.toggleUpdated !== this.props.toggleUpdated) {
     //   await this.updateTableContent();
     // }
@@ -343,7 +352,12 @@ class AccountsTable extends React.Component {
   //redirect to account details;
   handleClickRedirect = (accountBillEmail = "") => {
     localStorage.setItem("BillEmail", accountBillEmail);
-    this.setState({ redirect: true, curBillEmail: accountBillEmail });
+    localStorage.setItem("startDate", this.props.startDate);
+    localStorage.setItem("endDate", this.props.endDate);
+    this.setState({ 
+      redirect: true, 
+      curBillEmail: accountBillEmail
+    });
   };
 
   isSelected = id => this.state.selected.indexOf(id) !== -1;
@@ -368,7 +382,9 @@ class AccountsTable extends React.Component {
           <Redirect
             to={{
               pathname: "/accountsandinv/accountdetails",
-              state: { curBillEmail: this.state.curBillEmail }
+              state: { 
+                curBillEmail: this.state.curBillEmail
+              }
             }}
           />
         ) : null}

@@ -85,6 +85,7 @@ class AccountInvService {
       endDate,
       keyword
     } = param;
+    
     const sql = `SELECT 
                 DATE_FORMAT(max(x.trans_date), '%m/%d/%Y') as last_pay_date, 
                 (SUM(x.session_cost)-SUM(x.amount)) as balance, 
@@ -134,13 +135,13 @@ class AccountInvService {
       }
     }
     if (keyword.length > 0) {
-      const keywordClause = ` y.payor LIKE '%${keyword}%' OR
+      const keywordClause = ` (y.payor LIKE '%${keyword}%' OR
                               y.billing_email LIKE '%${keyword}%' OR
                               y.billing_full_name LIKE '%${keyword}%' OR
                               y.client_type LIKE '%${keyword}%' OR
                               y.billing_phone LIKE '%${keyword}%' OR
                               y.payment_type LIKE '%${keyword}%' OR
-                              y.client LIKE '%${keyword}%' `;
+                              y.client LIKE '%${keyword}%') `;
       if (whereClasue.length > 0) {
         whereClasue = whereClasue+` AND ${keywordClause} `;
       } else {
@@ -195,9 +196,11 @@ class AccountInvService {
 
   static async getAccountDetailByBE(param) {
     const {
-      bEmail
+      bEmail,
+      startDate,
+      endDate
     } = param;
-    let sql = `SELECT 
+    const sql = `SELECT 
                   DATE_FORMAT(x.event_date, '%m/%d/%Y') as date, x.description,  
                   x.client, 
                   x.session_cost, 
@@ -208,14 +211,25 @@ class AccountInvService {
                   (SELECT *, session_cost-amount bal FROM testevent WHERE billing_email = '${bEmail}') x 
                   JOIN (SELECT *, session_cost-amount bal FROM testevent WHERE billing_email = '${bEmail}') y 
                 ON 
-                  y.event_date <= x.event_date 
-                GROUP BY 
-                  x.id 
-                ORDER BY 
-                  x.event_date DESC`;
+                  y.event_date <= x.event_date `;
+    const groupOrderByClause = ` GROUP BY 
+                                x.id 
+                              ORDER BY 
+                                x.event_date DESC `;
+    let whereClasue = ``;
+    if (startDate.length > 0) {
+      whereClasue = ` WHERE '${startDate}' <= x.event_date `;
+    }
+    if (endDate.length > 0) {
+      if (whereClasue.length > 0) {
+        whereClasue = whereClasue+` AND x.event_date <= '${endDate}' `;
+      } else {
+        whereClasue = ` WHERE x.event_date <= '${endDate}' `;
+      }
+    }
     // const { billingEmail } = selected;
     try {
-      return await query(sql);
+      return await query(sql+whereClasue+groupOrderByClause);
     } catch (error) {
       throw error;
     }

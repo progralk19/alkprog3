@@ -153,12 +153,29 @@ class AccountsActions extends React.Component {
 
   handleSearchAction = () => {
     this.props.onUpdated(
-      '',
-      '',
+      this.state.startDate,
+      this.state.endDate,
       this.state.searchKeyWord
     );
-    this.setState({ openSearchDlg: false });
+    this.setState({
+       openSearchDlg: false 
+      });
   };
+
+  handleResetClick = () => {
+    localStorage.setItem('startDate', '');
+    localStorage.setItem('endDate', '');
+    this.setState({ 
+      startDate: '',
+      endDate: '',
+      searchKeyWord: ''
+    });
+    this.props.onUpdated(
+      '',
+      '',
+      ''
+    );
+  }
 
   render() {
     const { classes } = this.props;
@@ -307,6 +324,14 @@ class AccountsActions extends React.Component {
                     className={classNames(classes.leftIcon, classes.iconSmall)}
                   />
                   Search
+                </Button>
+                {/* Reset button */}
+                <Button 
+                  variant="contained" 
+                  className={classes.button}
+                  onClick={this.handleResetClick}
+                >
+                  Reset
                 </Button>
                 {/*
                 <Button
