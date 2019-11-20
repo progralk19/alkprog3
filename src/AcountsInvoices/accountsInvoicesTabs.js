@@ -10,6 +10,7 @@ import Cyan from "@material-ui/core/colors/cyan";
 import AccountsTable from "../Tables/accountsTable";
 
 import API from "../utils/API";
+import { isNull } from "util";
 
 const styles = theme => ({
   root: {
@@ -36,6 +37,16 @@ class AccountsInvoicesTabs extends React.Component {
       endDate: '',
       keyword: ''
     };
+
+    if (isNull( localStorage.getItem('startDate'))) {
+      localStorage.setItem('startDate', '')
+    }
+    if (isNull( localStorage.getItem('endDate'))) {
+      localStorage.setItem('endDate', '')
+    }
+    if (isNull( localStorage.getItem('keyword'))) {
+      localStorage.setItem('keyword', '')
+    }
   }  
 
   handleChangeTab = (event, value) => {
@@ -110,7 +121,10 @@ class AccountsInvoicesTabs extends React.Component {
         </Container>
 
         {value === 0 && (
-          <AccountsActions onUpdated={this.updateAccountsTable} />
+          <AccountsActions 
+            onUpdated={this.updateAccountsTable} 
+            keyword={ this.state.keyword }
+          />
         )}
         {value === 0 && (
           <AccountsTable

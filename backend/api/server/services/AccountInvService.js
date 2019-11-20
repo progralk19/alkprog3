@@ -116,13 +116,13 @@ class AccountInvService {
               INNER JOIN 
                 testevent x ON x.billing_email = y.billing_email `;
     const groupByClause = ` group by  
-                            y.payor, 
-                            y.billing_email, 
-                            y.billing_full_name, 
-                            y.client_type, 
-                            y.billing_phone, 
-                            y.payment_type, 
-                            y.client`;
+                            payor, 
+                            billing_email, 
+                            billing_full_name, 
+                            client_type, 
+                            billing_phone, 
+                            payment_type, 
+                            client`;
     let whereClasue = ``;
     if (startDate.length > 0) {
       whereClasue = ` WHERE '${startDate}' <= x.trans_date `;

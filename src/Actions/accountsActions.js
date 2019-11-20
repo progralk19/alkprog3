@@ -11,6 +11,7 @@ import Button from "@material-ui/core/Button";
 import AutoRenew from "@material-ui/icons/Autorenew";
 import Visibility from "@material-ui/icons/Visibility";
 import Search from "@material-ui/icons/Search";
+import Delete from "@material-ui/icons/Delete";
 import DateRange from "@material-ui/icons/DateRange";
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
@@ -89,7 +90,7 @@ class AccountsActions extends React.Component {
       invoiceNotes: "",
       // Added by Sasa for Search
       openSearchDlg: false,
-      searchKeyWord: ''
+      searchKeyWord: this.props.keyword
     };
   }
 
@@ -100,8 +101,7 @@ class AccountsActions extends React.Component {
 
   handleSearchClick = () => {
     this.setState({ 
-      openSearchDlg: true,
-      searchKeyWord: ''
+      openSearchDlg: true
     });
   };
 
@@ -331,6 +331,9 @@ class AccountsActions extends React.Component {
                   className={classes.button}
                   onClick={this.handleResetClick}
                 >
+                  <Delete
+                    className={classNames(classes.leftIcon, classes.iconSmall)}
+                  />
                   Reset
                 </Button>
                 {/*
