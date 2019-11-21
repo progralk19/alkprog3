@@ -50,8 +50,13 @@ import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import Chip from "@material-ui/core/Chip";
 import { isNull } from "util";
+import { tsConstructorType } from "@babel/types";
 
+// Global variables for Calendar
+let Eyear = 0, Emonth = 0, Eday = 0, Ehour = 0;
+let Estore = [];
 let mdyState = "month";
+let frequentMDH = [];
 
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
@@ -280,11 +285,44 @@ const DefaultEventWrapper = ({
     therapistInfo = event.resource.therapists;
   }
   let backColor = event.resource.category;
+  let eventWidth = 100;
+  let eventLeft = 0;
+  let eventHourCount = 0;
   if (isNull(backColor) || (backColor.indexOf('#') !== 0)) {
     backColor = "80cbc4";
   }
-
-  // const { className } = children.props;
+  const checkFreqYMD = (item) => {
+    return item.year === moment(event.start).year() &&
+            item.month === moment(event.start).month() &&
+            item.day === moment(event.start).date();
+  };
+  let curYear = moment(event.start).year();
+  let curMonth = moment(event.start).month();
+  let curDay = moment(event.start).date();
+  let curHour = moment(event.start).hour();
+  if (curYear != Eyear || curMonth != Emonth || curDay != Eday) {
+    Estore = [];
+  }
+  const checkEstore = (item) => {
+    return item === curHour;
+  };  
+  const TI = Estore.length;
+  const LI = (Estore.filter(checkEstore)).length;
+  Estore.push(curHour);
+  Eyear = curYear;
+  Emonth = curMonth;
+  Eday = curDay;
+  const freqItem = frequentMDH.find(checkFreqYMD);
+  if (typeof freqItem !== 'undefined') {
+    for (let i = 0; i < freqItem.hour.length; i ++) {
+      if (freqItem.hour[i] === curHour)
+        eventHourCount ++;
+    }
+  }
+  const TC = freqItem.hour.length;
+  const LC = eventHourCount;
+  eventWidth = parseFloat(TC*100.0)/(LC*1.0);
+  eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
   const className = "rbc-event";
 
   const title = `${localizer.format(
@@ -310,7 +348,7 @@ const DefaultEventWrapper = ({
   const hourStop = 60 * moment(event.end).hour() + moment(event.end).minutes();
   const top = (hourStart * 100) / (60 * 24);
   const height = ((hourStop - hourStart) * 100) / (60 * 24);
-
+  
   return type === "date" ? (
     children.props.type === "popup" ? (
       <div
@@ -318,7 +356,9 @@ const DefaultEventWrapper = ({
         tabIndex="0"
         className={customClass}
         onClick={() => onSelect(event)}
-        style={{ backgroundColor: backColor }}
+        style={{ 
+          backgroundColor: backColor
+        }}
       >
         <div className="rbc-event-content" title={title}>
           {title}
@@ -328,7 +368,10 @@ const DefaultEventWrapper = ({
       <div
         tabIndex="0"
         className={customClass}
-        style={{ height: "100%", backgroundColor: backColor }}
+        style={{
+            height: "100%", 
+            backgroundColor: backColor
+        }}
         onClick={() => onSelect(event)}
       >
         <div className="rbc-event-content" title={title}>
@@ -340,9 +383,14 @@ const DefaultEventWrapper = ({
     <div
       title={event.title}
       className={customClass}
-      style={{ gridRow: "1 / span 1", top: `${top}%`, height: `${height}%`,
-                backgroundColor: backColor
-             }}
+      style={{
+        gridRow: "1 / span 1", 
+        top: `${top}%`,
+        height: `${height}%`,
+        backgroundColor: backColor, 
+        width: `${eventWidth}%`,
+        left: `${eventLeft}%`
+      }}
       onClick={() => onClick()}
     >
       <div className="rbc-event-label">{label};</div>
@@ -618,8 +666,7 @@ class ReactCalendarBase extends Component {
       const clientData = clientsResp.data.data || [];
       const filteredCalEvents = calEvents.slice();
       const categories = categoriesResp.data.data || [];
-      this.setState(
-        {
+      this.setState({
           calEvents,
           therapistData,
           clientData,
@@ -630,6 +677,19 @@ class ReactCalendarBase extends Component {
           // this.changeContentWithClientId()
         }
       );
+
+      // realEventInited = 1;
+      // this.setState({
+      //     calEvents,
+      //     therapistData,
+      //     clientData,
+      //     filteredCalEvents,
+      //     categories
+      //   },
+      //   () => {
+      //     // this.changeContentWithClientId()
+      //   }
+      // );
     } catch (error) {
       console.log(error);
     }
@@ -1164,7 +1224,7 @@ class ReactCalendarBase extends Component {
     this.setState(newCategoryData);
   };
 
-  eventStyleGetter = (event, start, end, isSelected) => {    
+  eventStyleGetter = (event, start, end, isSelected) => {
     var backgroundColor = event.resource.category;
     var style = {
         backgroundColor: backgroundColor,
@@ -1197,68 +1257,45 @@ class ReactCalendarBase extends Component {
     }
     */
 
+    frequentMDH = [];
+    for (let i = 0; i < filteredCalEvents.length; i ++) {
+      let freqId = -1;
+      const Ey = moment(filteredCalEvents[i].start).year();
+      const Em = moment(filteredCalEvents[i].start).month();
+      const Ed = moment(filteredCalEvents[i].start).date();
+      const Eh = moment(filteredCalEvents[i].start).hour();
+      if (isNaN(Ey) || isNaN(Em) || isNaN(Ed)) {
+        continue;
+      }
+      for (let j = 0; j < frequentMDH.length; j ++) {
+        const frequentMDHElement = frequentMDH[j];
+        if (frequentMDHElement.year === Ey &&
+            frequentMDHElement.month === Em &&
+            frequentMDHElement.day === Ed) {
+              let frequentHour = frequentMDHElement.hour;
+              frequentHour = [...frequentHour, Eh];
+              frequentMDHElement.hour = frequentHour;
+              frequentMDH[j] = frequentMDHElement;
+              freqId = j;
+              break;
+        }
+      }
+      
+      if (freqId === -1) {
+        const newItem =  {
+          year: Ey,
+          month: Em,
+          day: Ed,
+          hour: [Eh]
+        }
+        frequentMDH = [...frequentMDH, newItem];
+      }
+    }
+  
     return (
       <div>
         <Container style={{ height: 1000 }} maxWidth="lg">
           <Grid container justify="center"></Grid>
-          {/* <TextField
-            id="therapistFilter"
-            select
-            label="Therapist"
-            className={classes.textField2}
-            value={filters.therapist}
-            onChange={this.handleTherapistFilterChange}
-            margin="normal"
-            variant="outlined"
-            SelectProps={{
-              MenuProps: {
-                className: classes.menu
-              }
-            }}
-          >
-            <MenuItem value="All" key="therapist-0">
-              All
-            </MenuItem>
-            {therapistData.map((value, index) => {
-              return (
-                <MenuItem
-                  value={value.member_full_name}
-                  key={`therapist-${index + 1}`}
-                >
-                  {value.member_full_name}
-                </MenuItem>
-              );
-            })}
-          </TextField> */}          
-          {/* <TextField
-            id="clientFilter"
-            select
-            label="Client"
-            className={classes.textField2}
-            value={filters.client}
-            onChange={this.handleClientFilterChange}
-            margin="normal"
-            variant="outlined"
-            SelectProps={{
-              MenuProps: {
-                className: classes.menu
-              }
-            }}
-          >
-            <MenuItem value="All" key="client-0">
-              All
-            </MenuItem>
-            {clientData.map((value, index) => {
-              return (
-                <MenuItem
-                  value={value.client_full_name}
-                  key={`client-${index + 1}`}
-                >
-                  {value.client_full_name}
-                </MenuItem>
-              );
-            })}
-          </TextField> */}
           <FormControl className={classes.formControlFilter}>
             <InputLabel id="clientMultiFilterLabel">Client</InputLabel>
             <Select
@@ -1276,12 +1313,6 @@ class ReactCalendarBase extends Component {
                 </div>
               )}
             >
-              {/* <MenuItem
-                key={`client-all`}
-                value={`All`}
-              >
-                {`All`}
-              </MenuItem> */}
               {clientData.map((value, index) => (
                 <MenuItem
                   key={`client-${index + 1}`}
@@ -1309,12 +1340,6 @@ class ReactCalendarBase extends Component {
                 </div>
               )}
             >
-              {/* <MenuItem
-                key={`therapist-all`}
-                value={`All`}
-              >
-                {`All`}
-              </MenuItem> */}
               {therapistData.map((value, index) => (
                 <MenuItem
                   key={`therapist-${index + 1}`}

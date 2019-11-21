@@ -39,15 +39,21 @@ class AccountsInvoicesTabs extends React.Component {
     };
 
     if (isNull( localStorage.getItem('startDate'))) {
-      localStorage.setItem('startDate', '')
+      localStorage.setItem('startDate', '');
     }
     if (isNull( localStorage.getItem('endDate'))) {
-      localStorage.setItem('endDate', '')
+      localStorage.setItem('endDate', '');
     }
     if (isNull( localStorage.getItem('keyword'))) {
-      localStorage.setItem('keyword', '')
+      localStorage.setItem('keyword', '');
     }
-  }  
+  }
+
+  componentWillUnmount() {
+      localStorage.setItem('startDate', '')
+      localStorage.setItem('endDate', '')
+      localStorage.setItem('keyword', '')
+  }
 
   handleChangeTab = (event, value) => {
     this.setState({ value });
