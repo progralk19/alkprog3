@@ -296,16 +296,16 @@ const DefaultEventWrapper = ({
             item.month === moment(event.start).month() &&
             item.day === moment(event.start).date();
   };
-  let curYear = moment(event.start).year();
-  let curMonth = moment(event.start).month();
-  let curDay = moment(event.start).date();
-  let curHour = moment(event.start).hour();
-  if (curYear != Eyear || curMonth != Emonth || curDay != Eday) {
+  const curYear = moment(event.start).year();
+  const curMonth = moment(event.start).month();
+  const curDay = moment(event.start).date();
+  const curHour = moment(event.start).hour();
+  if (curYear !== Eyear || curMonth !== Emonth || curDay !== Eday) {    
     Estore = [];
   }
   const checkEstore = (item) => {
     return item === curHour;
-  };  
+  };
   const TI = Estore.length;
   const LI = (Estore.filter(checkEstore)).length;
   Estore.push(curHour);
@@ -323,15 +323,21 @@ const DefaultEventWrapper = ({
   const LC = eventHourCount;
   eventWidth = parseFloat(TC*100.0)/(LC*1.0);
   eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
-  const className = "rbc-event";
+  eventLeft = eventLeft;
 
+  if (mdyState != "week") {
+    eventWidth = 100;
+    eventLeft = 0;
+  }
+
+  const className = "rbc-event";
   const title = `${localizer.format(
     event.start,
     "h:mm"
   )} - ${localizer.format(event.end, "h:mm a")}; ${clientInfo} (${
     therapistInfo
   })`;
-  let edgeColor;
+  let edgeColor = "";
   if (event.resource.attendance === "Present ($)") {
       edgeColor = "green";
   } else if (event.resource.attendance === "Absent, no notice ($)") {    
@@ -339,8 +345,13 @@ const DefaultEventWrapper = ({
   } else if (event.resource.attendance === "Absent, notice") {
       edgeColor = "yellow";
   }
-  if (mdyState === 'month')
+  if (mdyState === 'month') {
     edgeColor = edgeColor+'-month';
+  }
+
+  if (edgeColor != "" && eventWidth > 100) {
+    eventWidth = eventWidth*9/10;    
+  }
 
   const customClass = `${className} rbc-event--${edgeColor}`;
   const hourStart =
@@ -666,6 +677,13 @@ class ReactCalendarBase extends Component {
       const clientData = clientsResp.data.data || [];
       const filteredCalEvents = calEvents.slice();
       const categories = categoriesResp.data.data || [];
+
+      Eyear = 0;
+      Emonth = 0;
+      Eday = 0;
+      Ehour = 0;
+      Estore = [];      
+
       this.setState({
           calEvents,
           therapistData,
