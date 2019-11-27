@@ -8,8 +8,9 @@
 }
 
 .rbc-events-container {
-  display: grid;
-  grid-template-rows: 100%;
+  /* display: grid;
+  grid-template-rows: 100%; */
+  margin-right: 0px !important;
 }
 
 .rbc-timeslot-group {

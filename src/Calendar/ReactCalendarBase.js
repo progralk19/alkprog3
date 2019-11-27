@@ -54,6 +54,7 @@ import { tsConstructorType } from "@babel/types";
 
 // Global variables for Calendar
 let Eyear = 0, Emonth = 0, Eday = 0, Ehour = 0;
+let Etop = 0;
 let Estore = [];
 let mdyState = "month";
 let frequentMDH = [];
@@ -269,6 +270,149 @@ const CustomToolbar = ({ label, onNavigate, view, onView }) => {
   );
 };
 
+// const DefaultEventWrapper = ({
+//   event,
+//   onSelect,
+//   onClick,
+//   selected,
+//   label,
+//   type,
+//   children
+// }) => {
+//   let clientInfo = event.resource.client;
+//   let therapistInfo = event.resource.therapist;
+//   if (clientInfo.length == 0) {
+//     clientInfo = event.resource.clients;
+//     therapistInfo = event.resource.therapists;
+//   }
+//   let backColor = event.resource.category;
+//   let eventWidth = 100;
+//   let eventLeft = 0;
+//   let eventHourCount = 0;
+//   if (isNull(backColor) || (backColor.indexOf('#') !== 0)) {
+//     backColor = "80cbc4";
+//   }
+//   const checkFreqYMD = (item) => {
+//     return item.year === moment(event.start).year() &&
+//             item.month === moment(event.start).month() &&
+//             item.day === moment(event.start).date();
+//   };
+//   const curYear = moment(event.start).year();
+//   const curMonth = moment(event.start).month();
+//   const curDay = moment(event.start).date();
+//   const curHour = moment(event.start).hour();
+//   if (curYear !== Eyear || curMonth !== Emonth || curDay !== Eday) {    
+//     Estore = [];
+//   }
+//   const checkEstore = (item) => {
+//     return item === curHour;
+//   };
+//   const TI = Estore.length;
+//   const LI = (Estore.filter(checkEstore)).length;
+//   Estore.push(curHour);
+//   Eyear = curYear;
+//   Emonth = curMonth;
+//   Eday = curDay;
+//   const freqItem = frequentMDH.find(checkFreqYMD);
+//   if (typeof freqItem !== 'undefined') {
+//     for (let i = 0; i < freqItem.hour.length; i ++) {
+//       if (freqItem.hour[i] === curHour)
+//         eventHourCount ++;
+//     }
+//   }
+//   const TC = freqItem.hour.length;
+//   const LC = eventHourCount;
+//   eventWidth = parseFloat(TC*100.0)/(LC*1.0);
+//   eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
+//   eventLeft = eventLeft;
+
+//   // if (mdyState != "week") {
+//   //   eventWidth = 100;
+//   //   eventLeft = 0;
+//   // }
+
+//   const className = "rbc-event";
+//   const title = `${localizer.format(
+//     event.start,
+//     "h:mm"
+//   )} - ${localizer.format(event.end, "h:mm a")}; ${clientInfo} (${
+//     therapistInfo
+//   })`;
+//   let edgeColor;
+//   if (event.resource.attendance === "Present ($)") {
+//       edgeColor = "green";
+//   } else if (event.resource.attendance === "Absent, no notice ($)") {    
+//       edgeColor = "red";
+//   } else if (event.resource.attendance === "Absent, notice") {
+//       edgeColor = "yellow";
+//   }
+//   if (mdyState === 'month') {
+//     edgeColor = edgeColor+'-month';
+//   }
+
+//   if (edgeColor != "" && eventWidth > 100) {
+//     eventWidth = eventWidth*9/10;    
+//   }
+
+//   const customClass = `${className} rbc-event--${edgeColor}`;
+//   const hourStart =
+//     60 * moment(event.start).hour() + moment(event.start).minutes();
+//   const hourStop = 60 * moment(event.end).hour() + moment(event.end).minutes();
+//   const top = (hourStart * 100) / (60 * 24);
+//   const height = ((hourStop - hourStart) * 100) / (60 * 24);
+  
+//   return type === "date" ? (
+//     children.props.type === "popup" ? (
+//       <div
+//         type="popup"
+//         tabIndex="0"
+//         className={customClass}
+//         onClick={() => onSelect(event)}
+//         style={{ 
+//           backgroundColor: backColor
+//         }}
+//       >
+//         <div className="rbc-event-content" title={title}>
+//           {title}
+//         </div>
+//       </div>
+//     ) : (
+//       <div
+//         tabIndex="0"
+//         className={customClass}
+//         style={{
+//             height: "100%", 
+//             backgroundColor: backColor
+//         }}
+//         onClick={() => onSelect(event)}
+//       >
+//         <div className="rbc-event-content" title={title}>
+//           {title}
+//         </div>
+//       </div>
+//     )
+//   ) : (
+//     <div
+//       title={event.title}
+//       className={customClass}
+//       style={{
+//         gridRow: "1 / span 1", 
+//         top: `${top}%`,
+//         height: `${height}%`,
+//         backgroundColor: backColor, 
+//         width: `${eventWidth}%`,
+//         left: `${eventLeft}%`
+//       }}
+//       onClick={() => onClick()}
+//     >
+//       <div className="rbc-event-label">{label};</div>
+//       <div className="rbc-event-content">
+//         {clientInfo} ({therapistInfo})
+//       </div>
+//     </div>
+//   );
+// };
+
 const DefaultEventWrapper = ({
   event,
   onSelect,
@@ -300,7 +444,8 @@ const DefaultEventWrapper = ({
   const curMonth = moment(event.start).month();
   const curDay = moment(event.start).date();
   const curHour = moment(event.start).hour();
-  if (curYear !== Eyear || curMonth !== Emonth || curDay !== Eday) {    
+  if (curYear !== Eyear || curMonth !== Emonth || curDay !== Eday) {
+    Etop = 0;
     Estore = [];
   }
   const checkEstore = (item) => {
@@ -323,12 +468,7 @@ const DefaultEventWrapper = ({
   const LC = eventHourCount;
   eventWidth = parseFloat(TC*100.0)/(LC*1.0);
   eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
-  eventLeft = eventLeft;
-
-  if (mdyState != "week") {
-    eventWidth = 100;
-    eventLeft = 0;
-  }
+  eventLeft = 0;  
 
   const className = "rbc-event";
   const title = `${localizer.format(
@@ -337,7 +477,7 @@ const DefaultEventWrapper = ({
   )} - ${localizer.format(event.end, "h:mm a")}; ${clientInfo} (${
     therapistInfo
   })`;
-  let edgeColor = "";
+  let edgeColor;
   if (event.resource.attendance === "Present ($)") {
       edgeColor = "green";
   } else if (event.resource.attendance === "Absent, no notice ($)") {    
@@ -347,18 +487,19 @@ const DefaultEventWrapper = ({
   }
   if (mdyState === 'month') {
     edgeColor = edgeColor+'-month';
-  }
-
-  if (edgeColor != "" && eventWidth > 100) {
-    eventWidth = eventWidth*9/10;    
-  }
+  }  
 
   const customClass = `${className} rbc-event--${edgeColor}`;
   const hourStart =
     60 * moment(event.start).hour() + moment(event.start).minutes();
   const hourStop = 60 * moment(event.end).hour() + moment(event.end).minutes();
-  const top = (hourStart * 100) / (60 * 24);
+  let top = (hourStart * 100) / (60 * 24);
   const height = ((hourStop - hourStart) * 100) / (60 * 24);
+
+  eventWidth = 100/LC;
+  eventLeft = eventWidth*LI;  
+  Etop += height;
+  top = top-Etop;
   
   return type === "date" ? (
     children.props.type === "popup" ? (
