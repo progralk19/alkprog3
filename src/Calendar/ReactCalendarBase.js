@@ -54,10 +54,13 @@ import { tsConstructorType } from "@babel/types";
 
 // Global variables for Calendar
 let Eyear = 0, Emonth = 0, Eday = 0, Ehour = 0;
-let Etop = 0;
 let Estore = [];
 let mdyState = "month";
 let frequentMDH = [];
+
+const initGlobalVariables = () => {
+  Estore = [];
+}
 
 const localizer = Calendar.momentLocalizer(moment);
 const propTypes = {};
@@ -220,23 +223,65 @@ const customFreqOptions = [
   */
 ];
 
+const appendEventToFrequentArray = (event) => {
+  let freqId = -1;
+  const Ey = moment(event.start).year();
+  const Em = moment(event.start).month();
+  const Ed = moment(event.start).date();
+  if (isNaN(Ey) || isNaN(Em) || isNaN(Ed)) {
+    return;
+  } else {
+    for (let j = 0; j < frequentMDH.length; j ++) {
+      const frequentMDHElement = frequentMDH[j];
+      if (frequentMDHElement.year === Ey &&
+          frequentMDHElement.month === Em &&
+          frequentMDHElement.day === Ed) {
+            let frequentDate = frequentMDHElement.date;            
+            frequentDate = [...frequentDate, event.start];
+            frequentMDHElement.date = frequentDate;
+            frequentMDH[j] = frequentMDHElement;
+            freqId = j;
+            break;
+      }
+    }
+    
+    if (freqId === -1) {
+      const newItem =  {
+        year: Ey,
+        month: Em,
+        day: Ed,
+        date: [event.start]
+      }
+      frequentMDH = [...frequentMDH, newItem];
+    }
+  }
+};
 
 const selectView = (onView, where) => {
   mdyState = where;
+  Estore = [];
   onView(where);
+};
+
+const selectToolbar = (onNavigate, where) => {
+  Estore = [];
+  onNavigate(where);
 };
 
 const CustomToolbar = ({ label, onNavigate, view, onView }) => {
   return (
     <div className="rbc-toolbar">
       <span className="rbc-btn-group">
-        <button type="button" onClick={() => onNavigate("PREV")}>
+        {/* <button type="button" onClick={() => onNavigate("PREV")}> */}
+        <button type="button" onClick={() => selectToolbar(onNavigate, "PREV")}>        
           Back
         </button>
-        <button type="button" onClick={() => onNavigate("TODAY")}>
+        {/* <button type="button" onClick={() => onNavigate("TODAY")}> */}
+        <button type="button" onClick={() => selectToolbar(onNavigate, "TODAY")}>        
           Today
         </button>
-        <button type="button" onClick={() => onNavigate("NEXT")}>
+        <button type="button" onClick={() => selectToolbar(onNavigate, "NEXT")}>        
+        {/* <button type="button" onClick={() => onNavigate("NEXT")}> */}
           Next
         </button>
       </span>
@@ -270,149 +315,6 @@ const CustomToolbar = ({ label, onNavigate, view, onView }) => {
   );
 };
 
-// const DefaultEventWrapper = ({
-//   event,
-//   onSelect,
-//   onClick,
-//   selected,
-//   label,
-//   type,
-//   children
-// }) => {
-//   let clientInfo = event.resource.client;
-//   let therapistInfo = event.resource.therapist;
-//   if (clientInfo.length == 0) {
-//     clientInfo = event.resource.clients;
-//     therapistInfo = event.resource.therapists;
-//   }
-//   let backColor = event.resource.category;
-//   let eventWidth = 100;
-//   let eventLeft = 0;
-//   let eventHourCount = 0;
-//   if (isNull(backColor) || (backColor.indexOf('#') !== 0)) {
-//     backColor = "80cbc4";
-//   }
-//   const checkFreqYMD = (item) => {
-//     return item.year === moment(event.start).year() &&
-//             item.month === moment(event.start).month() &&
-//             item.day === moment(event.start).date();
-//   };
-//   const curYear = moment(event.start).year();
-//   const curMonth = moment(event.start).month();
-//   const curDay = moment(event.start).date();
-//   const curHour = moment(event.start).hour();
-//   if (curYear !== Eyear || curMonth !== Emonth || curDay !== Eday) {    
-//     Estore = [];
-//   }
-//   const checkEstore = (item) => {
-//     return item === curHour;
-//   };
-//   const TI = Estore.length;
-//   const LI = (Estore.filter(checkEstore)).length;
-//   Estore.push(curHour);
-//   Eyear = curYear;
-//   Emonth = curMonth;
-//   Eday = curDay;
-//   const freqItem = frequentMDH.find(checkFreqYMD);
-//   if (typeof freqItem !== 'undefined') {
-//     for (let i = 0; i < freqItem.hour.length; i ++) {
-//       if (freqItem.hour[i] === curHour)
-//         eventHourCount ++;
-//     }
-//   }
-//   const TC = freqItem.hour.length;
-//   const LC = eventHourCount;
-//   eventWidth = parseFloat(TC*100.0)/(LC*1.0);
-//   eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
-//   eventLeft = eventLeft;
-
-//   // if (mdyState != "week") {
-//   //   eventWidth = 100;
-//   //   eventLeft = 0;
-//   // }
-
-//   const className = "rbc-event";
-//   const title = `${localizer.format(
-//     event.start,
-//     "h:mm"
-//   )} - ${localizer.format(event.end, "h:mm a")}; ${clientInfo} (${
-//     therapistInfo
-//   })`;
-//   let edgeColor;
-//   if (event.resource.attendance === "Present ($)") {
-//       edgeColor = "green";
-//   } else if (event.resource.attendance === "Absent, no notice ($)") {    
-//       edgeColor = "red";
-//   } else if (event.resource.attendance === "Absent, notice") {
-//       edgeColor = "yellow";
-//   }
-//   if (mdyState === 'month') {
-//     edgeColor = edgeColor+'-month';
-//   }
-
-//   if (edgeColor != "" && eventWidth > 100) {
-//     eventWidth = eventWidth*9/10;    
-//   }
-
-//   const customClass = `${className} rbc-event--${edgeColor}`;
-//   const hourStart =
-//     60 * moment(event.start).hour() + moment(event.start).minutes();
-//   const hourStop = 60 * moment(event.end).hour() + moment(event.end).minutes();
-//   const top = (hourStart * 100) / (60 * 24);
-//   const height = ((hourStop - hourStart) * 100) / (60 * 24);
-  
-//   return type === "date" ? (
-//     children.props.type === "popup" ? (
-//       <div
-//         type="popup"
-//         tabIndex="0"
-//         className={customClass}
-//         onClick={() => onSelect(event)}
-//         style={{ 
-//           backgroundColor: backColor
-//         }}
-//       >
-//         <div className="rbc-event-content" title={title}>
-//           {title}
-//         </div>
-//       </div>
-//     ) : (
-//       <div
-//         tabIndex="0"
-//         className={customClass}
-//         style={{
-//             height: "100%", 
-//             backgroundColor: backColor
-//         }}
-//         onClick={() => onSelect(event)}
-//       >
-//         <div className="rbc-event-content" title={title}>
-//           {title}
-//         </div>
-//       </div>
-//     )
-//   ) : (
-//     <div
-//       title={event.title}
-//       className={customClass}
-//       style={{
-//         gridRow: "1 / span 1", 
-//         top: `${top}%`,
-//         height: `${height}%`,
-//         backgroundColor: backColor, 
-//         width: `${eventWidth}%`,
-//         left: `${eventLeft}%`
-//       }}
-//       onClick={() => onClick()}
-//     >
-//       <div className="rbc-event-label">{label};</div>
-//       <div className="rbc-event-content">
-//         {clientInfo} ({therapistInfo})
-//       </div>
-//     </div>
-//   );
-// };
-
 const DefaultEventWrapper = ({
   event,
   onSelect,
@@ -440,35 +342,42 @@ const DefaultEventWrapper = ({
             item.month === moment(event.start).month() &&
             item.day === moment(event.start).date();
   };
-  const curYear = moment(event.start).year();
-  const curMonth = moment(event.start).month();
-  const curDay = moment(event.start).date();
+  let curYear = moment(event.start).year();
+  let curMonth = moment(event.start).month();
+  let curDay = moment(event.start).date();
   const curHour = moment(event.start).hour();
-  if (curYear !== Eyear || curMonth !== Emonth || curDay !== Eday) {
-    Etop = 0;
+  if (curYear != Eyear || curMonth != Emonth || curDay != Eday) {
     Estore = [];
   }
-  const checkEstore = (item) => {
-    return item === curHour;
-  };
-  const TI = Estore.length;
-  const LI = (Estore.filter(checkEstore)).length;
-  Estore.push(curHour);
   Eyear = curYear;
   Emonth = curMonth;
   Eday = curDay;
-  const freqItem = frequentMDH.find(checkFreqYMD);
+  const freqItem = frequentMDH.find(checkFreqYMD);  
   if (typeof freqItem !== 'undefined') {
-    for (let i = 0; i < freqItem.hour.length; i ++) {
-      if (freqItem.hour[i] === curHour)
+    for (let i = 0; i < freqItem.date.length; i ++) {
+      if (moment(freqItem.date[i]).hour() === curHour)
         eventHourCount ++;
     }
   }
-  const TC = freqItem.hour.length;
+  const TC = freqItem.date.length;
   const LC = eventHourCount;
-  eventWidth = parseFloat(TC*100.0)/(LC*1.0);
-  eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
-  eventLeft = 0;  
+  // if (LC !== 0)
+  //   eventWidth = parseFloat(TC*100.0)/(LC*1.0);
+  // if (TC !== 0)
+  //   eventLeft = (LI*TC-TI*LC)*eventWidth/TC;
+
+  let TI = 0;
+  let LI = 0;
+  let allHeight = 0;
+  for (let i = 0; i < Estore.length; i ++, TI ++) {
+    if (Estore[i].id === event.resource.id) {
+      break;
+    }
+    if (moment(Estore[i].date).hour() === curHour) {
+      LI ++;      
+    }
+    allHeight = allHeight+Estore[i].height;
+  }
 
   const className = "rbc-event";
   const title = `${localizer.format(
@@ -487,20 +396,32 @@ const DefaultEventWrapper = ({
   }
   if (mdyState === 'month') {
     edgeColor = edgeColor+'-month';
-  }  
+  }
 
   const customClass = `${className} rbc-event--${edgeColor}`;
   const hourStart =
     60 * moment(event.start).hour() + moment(event.start).minutes();
   const hourStop = 60 * moment(event.end).hour() + moment(event.end).minutes();
   let top = (hourStart * 100) / (60 * 24);
-  const height = ((hourStop - hourStart) * 100) / (60 * 24);
+  let height = ((hourStop - hourStart) * 100) / (60 * 24);
+  top = top-allHeight;
 
-  eventWidth = 100/LC;
-  eventLeft = eventWidth*LI;  
-  Etop += height;
-  top = top-Etop;
-  
+  if ((Estore.filter(e => e.id === event.resource.id).length) === 0) {
+    const newEstoreData = {
+      id: event.resource.id,
+      date: event.start, 
+      height: height
+    };
+    Estore = [...Estore, newEstoreData];
+  }
+
+  eventWidth = 100;
+  eventLeft = 0;
+  if (LC > 0) {
+    eventWidth = 100.0/LC;
+    eventLeft = eventWidth*LI;
+  }
+
   return type === "date" ? (
     children.props.type === "popup" ? (
       <div
@@ -539,7 +460,7 @@ const DefaultEventWrapper = ({
         gridRow: "1 / span 1", 
         top: `${top}%`,
         height: `${height}%`,
-        backgroundColor: backColor, 
+        backgroundColor: backColor,
         width: `${eventWidth}%`,
         left: `${eventLeft}%`
       }}
@@ -823,7 +744,7 @@ class ReactCalendarBase extends Component {
       Emonth = 0;
       Eday = 0;
       Ehour = 0;
-      Estore = [];      
+      initGlobalVariables();   
 
       this.setState({
           calEvents,
@@ -836,19 +757,6 @@ class ReactCalendarBase extends Component {
           // this.changeContentWithClientId()
         }
       );
-
-      // realEventInited = 1;
-      // this.setState({
-      //     calEvents,
-      //     therapistData,
-      //     clientData,
-      //     filteredCalEvents,
-      //     categories
-      //   },
-      //   () => {
-      //     // this.changeContentWithClientId()
-      //   }
-      // );
     } catch (error) {
       console.log(error);
     }
@@ -1008,7 +916,7 @@ class ReactCalendarBase extends Component {
     if (!isNull(therapists) && therapists.length !== 0)
       therapistList = therapists.split(',');
 
-    if (Boolean(repeats)) this.setState({ isSoleDialog: true });
+    if (Boolean(repeats)) this.setState({ isSoleDialog: true });    
     else this.setState({ openExisting: true });
 
     this.setState({
@@ -1418,37 +1326,7 @@ class ReactCalendarBase extends Component {
 
     frequentMDH = [];
     for (let i = 0; i < filteredCalEvents.length; i ++) {
-      let freqId = -1;
-      const Ey = moment(filteredCalEvents[i].start).year();
-      const Em = moment(filteredCalEvents[i].start).month();
-      const Ed = moment(filteredCalEvents[i].start).date();
-      const Eh = moment(filteredCalEvents[i].start).hour();
-      if (isNaN(Ey) || isNaN(Em) || isNaN(Ed)) {
-        continue;
-      }
-      for (let j = 0; j < frequentMDH.length; j ++) {
-        const frequentMDHElement = frequentMDH[j];
-        if (frequentMDHElement.year === Ey &&
-            frequentMDHElement.month === Em &&
-            frequentMDHElement.day === Ed) {
-              let frequentHour = frequentMDHElement.hour;
-              frequentHour = [...frequentHour, Eh];
-              frequentMDHElement.hour = frequentHour;
-              frequentMDH[j] = frequentMDHElement;
-              freqId = j;
-              break;
-        }
-      }
-      
-      if (freqId === -1) {
-        const newItem =  {
-          year: Ey,
-          month: Em,
-          day: Ed,
-          hour: [Eh]
-        }
-        frequentMDH = [...frequentMDH, newItem];
-      }
+      appendEventToFrequentArray(filteredCalEvents[i]);
     }
   
     return (
