@@ -195,7 +195,7 @@ class AccountDetailsTable extends React.Component {
   // isSelected = id => this.state.selected.indexOf(id) !== -1;
 
   render() {
-    let tableRowIndex = 0;
+    let tableRowIndex = 0; // detail table's unique key
     const { classes } = this.props;
     const { accountDetailData, order, orderBy, rowsPerPage, page } = this.state;
     const emptyRows =
