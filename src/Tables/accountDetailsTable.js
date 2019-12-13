@@ -195,6 +195,7 @@ class AccountDetailsTable extends React.Component {
   // isSelected = id => this.state.selected.indexOf(id) !== -1;
 
   render() {
+    let tableRowIndex = 0;
     const { classes } = this.props;
     const { accountDetailData, order, orderBy, rowsPerPage, page } = this.state;
     const emptyRows =
@@ -223,14 +224,14 @@ class AccountDetailsTable extends React.Component {
                         hover
                         className={classes.row}
                         tabIndex={-1}
-                        key={n.id}
+                        key={tableRowIndex++}
                       >
-                        <TableCell align="center" key="date">{n.date}</TableCell>
-                        <TableCell align="center" key="client">{n.client}</TableCell>
-                        <TableCell align="center" key="description">{n.description}</TableCell>
-                        <TableCell align="center" key="session_cost">{n.session_cost}</TableCell>
-                        <TableCell align="center" key="amount">{n.amount}</TableCell>
-                        <TableCell align="center" key="balance">{n.balance}</TableCell>
+                        <TableCell align="center">{n.date}</TableCell>
+                        <TableCell align="center">{n.client}</TableCell>
+                        <TableCell align="center">{n.description}</TableCell>
+                        <TableCell align="center">{n.session_cost}</TableCell>
+                        <TableCell align="center">{n.amount}</TableCell>
+                        <TableCell align="center">{n.balance}</TableCell>
                       </TableRow>
                     );
                   })}

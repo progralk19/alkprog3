@@ -352,8 +352,6 @@ class AccountsTable extends React.Component {
   //redirect to account details;
   handleClickRedirect = (accountBillEmail = "") => {
     localStorage.setItem("BillEmail", accountBillEmail);
-    localStorage.setItem("startDate", this.props.startDate);
-    localStorage.setItem("endDate", this.props.endDate);
     this.setState({ 
       redirect: true, 
       curBillEmail: accountBillEmail

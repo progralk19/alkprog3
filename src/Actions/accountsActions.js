@@ -80,10 +80,8 @@ class AccountsActions extends React.Component {
       openTransactions: false,
       openDateRange: false,      
       payor: "",
-      startDate: moment().format("YYYY-MM-DD"),
-      endDate: moment()
-        .add(1, "month")
-        .format("YYYY-MM-DD"),
+      startDate: localStorage.getItem('startDate'),
+      endDate: localStorage.getItem('endDate'),
       invoiceDate: "",
       invoiceAmount: "",
       dueDate: "",
@@ -123,11 +121,7 @@ class AccountsActions extends React.Component {
   /* cancel date range diaglog box */
   handleCancelDateRange = () => {
     this.setState({
-      openDateRange: false,
-      startDate: moment().format("YYYY-MM-DD"),
-      endDate: moment()
-        .add(1, "month")
-        .format("YYYY-MM-DD")
+      openDateRange: false
     });
   };
 
@@ -163,16 +157,14 @@ class AccountsActions extends React.Component {
   };
 
   handleResetClick = () => {
-    localStorage.setItem('startDate', '');
-    localStorage.setItem('endDate', '');
     this.setState({ 
-      startDate: '',
-      endDate: '',
+      startDate: moment().format("YYYY-MM-DD"),
+      endDate: moment().add(1, "month").format("YYYY-MM-DD"),
       searchKeyWord: ''
     });
     this.props.onUpdated(
-      '',
-      '',
+      moment().format("YYYY-MM-DD"),
+      moment().add(1, "month").format("YYYY-MM-DD"),
       ''
     );
   }

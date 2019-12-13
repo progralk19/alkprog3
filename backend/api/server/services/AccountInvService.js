@@ -125,13 +125,13 @@ class AccountInvService {
                             client`;
     let whereClasue = ``;
     if (startDate.length > 0) {
-      whereClasue = ` WHERE '${startDate}' <= x.trans_date `;
+      whereClasue = ` WHERE '${startDate}' <= x.event_date `;
     }
     if (endDate.length > 0) {
       if (whereClasue.length > 0) {
-        whereClasue = whereClasue+` AND x.trans_date <= '${endDate}' `;
+        whereClasue = whereClasue+` AND x.event_date <= '${endDate}' `;
       } else {
-        whereClasue = ` WHERE x.trans_date <= '${endDate}' `;
+        whereClasue = ` WHERE x.event_date <= '${endDate}' `;
       }
     }
     if (keyword.length > 0) {

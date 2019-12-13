@@ -7,6 +7,7 @@ import Tab from "@material-ui/core/Tab";
 import AccountsActions from "../Actions/accountsActions";
 import Container from "@material-ui/core/Container";
 import Cyan from "@material-ui/core/colors/cyan";
+import moment from "moment";
 import AccountsTable from "../Tables/accountsTable";
 
 import API from "../utils/API";
@@ -24,6 +25,20 @@ const styles = theme => ({
 class AccountsInvoicesTabs extends React.Component {
   constructor(props) {
     super(props);
+
+    const start = localStorage.getItem("startDate");
+    const end = localStorage.getItem("endDate");
+    const keyword = localStorage.getItem("keyword");    
+
+    if (isNull(start) || start === '') {
+      localStorage.setItem('startDate', moment().format("YYYY-MM-DD"));
+    }
+    if (isNull(end) || end === '') {
+      localStorage.setItem('endDate', moment().add(1, "month").format("YYYY-MM-DD"));
+    }
+    if (isNull(keyword) || keyword === '') {
+      localStorage.setItem('keyword', '');
+    }
     
     this.state = {
       value: 0,
@@ -37,22 +52,6 @@ class AccountsInvoicesTabs extends React.Component {
       endDate: '',
       keyword: ''
     };
-
-    if (isNull( localStorage.getItem('startDate'))) {
-      localStorage.setItem('startDate', '');
-    }
-    if (isNull( localStorage.getItem('endDate'))) {
-      localStorage.setItem('endDate', '');
-    }
-    if (isNull( localStorage.getItem('keyword'))) {
-      localStorage.setItem('keyword', '');
-    }
-  }
-
-  componentWillUnmount() {
-      localStorage.setItem('startDate', '')
-      localStorage.setItem('endDate', '')
-      localStorage.setItem('keyword', '')
   }
 
   handleChangeTab = (event, value) => {
@@ -60,6 +59,9 @@ class AccountsInvoicesTabs extends React.Component {
   };
 
   updateAccountsTable = (start, end, keyword) => {
+    localStorage.setItem('startDate', start);
+    localStorage.setItem('endDate', end);
+    localStorage.setItem('keyword', keyword);
     this.setState((prevState => ({
       toggleAccountsTableUpdated: !prevState.toggleAccountsTableUpdated,
       startDate: start,
